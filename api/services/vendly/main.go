@@ -2,11 +2,18 @@ package main
 
 import (
 	"context"
+	"errors"
+	"expvar"
+	"fmt"
 	"os"
 	"runtime"
+	"time"
 
+	"github.com/ardanlabs/conf/v3"
 	"github.com/kamogelosekhukhune777/multi-vendor-ecom/foundation/logger"
 )
+
+var build = "develop"
 
 func main() {
 	var log *logger.Logger
@@ -42,6 +49,51 @@ func run(ctx context.Context, log *logger.Logger) error {
 
 	// ------------------------------------------------------------------------------------------------------
 	// Configuration
+
+	cfg := struct {
+		conf.Version
+		Web struct {
+			ReadTimeout        time.Duration `conf:"default:5s"`
+			WriteTimeout       time.Duration `conf:"default:10s"`
+			IdleTimeout        time.Duration `conf:"default:120s"`
+			ShutdownTimeout    time.Duration `conf:"default:20s"`
+			APIHost            string        `conf:"default:0.0.0.0:3000"`
+			DebugHost          string        `conf:"default:0.0.0.0:3010"`
+			CORSAllowedOrigins []string      `conf:"default:*"`
+		}
+	}{
+		Version: conf.Version{
+			Build: build,
+			Desc:  "vendly",
+		},
+	}
+
+	const prefix = "VENDLY"
+	help, err := conf.Parse(prefix, &cfg)
+	if err != nil {
+		if errors.Is(err, conf.ErrHelpWanted) {
+			fmt.Println(help)
+			return nil
+		}
+		return fmt.Errorf("parsing config: %w", err)
+	}
+
+	// -----------------------------------------------------------------------------------------------------------
+	// App Starting
+
+	log.Info(ctx, "starting service", "version", cfg.Build)
+	defer log.Info(ctx, "shutdown complete")
+
+	out, err := conf.String(&cfg)
+	if err != nil {
+		return fmt.Errorf("generating config for output: %w", err)
+	}
+
+	log.Info(ctx, "startup", "config", out)
+
+	expvar.NewString("build").Set(cfg.Build)
+
+	// -----------------------------------------------------------------------------------------------------------
 
 	return nil
 }
