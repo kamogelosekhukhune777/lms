@@ -5,11 +5,13 @@ import (
 	"errors"
 	"expvar"
 	"fmt"
+	"net/http"
 	"os"
 	"runtime"
 	"time"
 
 	"github.com/ardanlabs/conf/v3"
+	"github.com/kamogelosekhukhune777/multi-vendor-ecom/app/sdk/debug"
 	"github.com/kamogelosekhukhune777/multi-vendor-ecom/foundation/logger"
 )
 
@@ -94,6 +96,15 @@ func run(ctx context.Context, log *logger.Logger) error {
 	expvar.NewString("build").Set(cfg.Build)
 
 	// -----------------------------------------------------------------------------------------------------------
+	// Start Debug Service
+
+	go func() {
+		log.Info(ctx, "startup", "status", "debug v1 router started", "host", cfg.Web.DebugHost)
+
+		if err := http.ListenAndServe(cfg.Web.DebugHost, debug.Mux()); err != nil {
+			log.Error(ctx, "shutdown", "status", "debug v1 router closed", "host", cfg.Web.DebugHost, "msg", err)
+		}
+	}()
 
 	return nil
 }
