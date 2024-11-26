@@ -18,23 +18,27 @@ type Logger func(ctx context.Context, msg string, args ...any)
 // object for each of our http handlers. Feel free to add any configuration
 // data/logic on this App struct.
 type App struct {
-	log Logger
 	*http.ServeMux
+	log Logger
+	mw  []MidFunc
 }
 
 // NewApp creates an App value that handle a set of routes for the application.
-func NewApp(log Logger) *App {
+func NewApp(log Logger, mw ...MidFunc) *App {
 	mux := http.NewServeMux()
 
 	return &App{
 		log:      log,
 		ServeMux: mux,
+		mw:       mw,
 	}
 }
 
 // HandlerFunc sets a handler function for a given HTTP method and path pair
 // to the application server mux.
-func (a *App) HandlerFunc(method string, group string, path string, handler Handler) {
+func (a *App) HandlerFunc(method string, group string, path string, handler Handler, mw ...MidFunc) {
+	handler = wrapMiddleware(mw, handler)
+	handler = wrapMiddleware(a.mw, handler)
 
 	h := func(w http.ResponseWriter, r *http.Request) {
 
