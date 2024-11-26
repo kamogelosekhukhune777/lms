@@ -1,0 +1,33 @@
+# Build the Go Binary.
+FROM golang:1.23 AS build_vendly
+
+ENV CGO_ENABLED=0
+
+ARG BUILD_REF
+
+# Copy the source code into the container.
+COPY . /vendly
+
+# Build the vendly binary.
+WORKDIR /vendly/api/services/vendly
+
+RUN go build -o threadly -ldflags "-X main.build=${BUILD_REF}"
+
+#======================================================================================================================
+
+# Run the Go Binary in Alpine.
+FROM alpine:3.20
+
+ARG BUILD_DATE
+ARG BUILD_REF
+
+RUN addgroup -g 1000 -S vendor && \
+    adduser -u 1000 -h /vendly -G vendor -S vendor
+
+COPY --from=build_vendly --chown=vendor:vendor /vendly/api/services/vendly/threadly /vendly
+
+WORKDIR /vendly
+
+USER vendor
+
+CMD ["./vendly"]

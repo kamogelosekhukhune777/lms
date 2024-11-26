@@ -1,3 +1,21 @@
+# ============================================================================================
+VENDLY_APP       := vendly
+BASE_IMAGE_NAME  := localhost/kamogelosekhukhune777
+VERSION          := 0.0.1
+VENDLY_IMAGE     := $(BASE_IMAGE_NAME)/$(VENDLY_APP):$(VERSION)
+
+# ============================================================================================
+# Building containers
+
+build: vendly
+
+vendly:
+	docker build \
+		-f zarf/docker/dockerfile.vendly \
+		-t $(VENDLY_IMAGE) \
+		--build-arg BUILD_REF=$(VERSION) \
+		--build-arg BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ") \
+		.
 
 # ============================================================================================
 
@@ -10,7 +28,7 @@ version:
 run-help:
 	go run api/services/vendly/main.go --help | go run api/tooling/logfmt/main.go
 
-# ==============================================================================
+# ============================================================================================
 # Metrics and Tracing
 
 metrics-view-sc:
