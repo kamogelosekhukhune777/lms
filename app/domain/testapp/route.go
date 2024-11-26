@@ -20,4 +20,5 @@ func Routes(app *web.App, cfg Config) {
 	api := newApp(cfg.Build, cfg.Log)
 
 	app.HandlerFunc(http.MethodGet, version, "/test", api.test)
+	app.HandlerFunc(http.MethodGet, version, "/testerror", api.testError)
 }

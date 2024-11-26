@@ -2,10 +2,12 @@ package mid
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
 
+	"github.com/kamogelosekhukhune777/vendly/app/sdk/errs"
 	"github.com/kamogelosekhukhune777/vendly/foundation/logger"
 	"github.com/kamogelosekhukhune777/vendly/foundation/web"
 )
@@ -25,8 +27,18 @@ func Logger(log *logger.Logger) web.MidFunc {
 
 			err := next(ctx, w, r)
 
+			var statusCode = errs.OK
+			if err != nil {
+				statusCode = errs.Internal
+
+				var v *errs.Error
+				if errors.As(err, &v) {
+					statusCode = v.Code
+				}
+			}
+
 			log.Info(ctx, "request completed", "method", r.Method, "path", path, "remoteaddr", r.RemoteAddr,
-				"since", time.Since(now).String())
+				"statuscode", statusCode, "since", time.Since(now).String())
 
 			return err
 		}
