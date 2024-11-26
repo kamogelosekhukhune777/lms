@@ -14,6 +14,7 @@ import (
 
 	"github.com/ardanlabs/conf/v3"
 	"github.com/kamogelosekhukhune777/multi-vendor-ecom/app/sdk/debug"
+	"github.com/kamogelosekhukhune777/multi-vendor-ecom/app/sdk/mux"
 	"github.com/kamogelosekhukhune777/multi-vendor-ecom/foundation/logger"
 )
 
@@ -116,9 +117,16 @@ func run(ctx context.Context, log *logger.Logger) error {
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 
+	cfgMux := mux.Config{
+		Build: build,
+		Log:   log,
+	}
+
+	webAPI := mux.WebAPI(cfgMux)
+
 	api := http.Server{
 		Addr:         cfg.Web.APIHost,
-		Handler:      nil,
+		Handler:      webAPI,
 		ReadTimeout:  cfg.Web.ReadTimeout,
 		WriteTimeout: cfg.Web.WriteTimeout,
 		IdleTimeout:  cfg.Web.IdleTimeout,
