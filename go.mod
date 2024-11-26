@@ -1,4 +1,4 @@
-module github.com/kamogelosekhukhune777/multi-vendor-ecom
+module github.com/kamogelosekhukhune777/vendly
 
 go 1.23.2
 

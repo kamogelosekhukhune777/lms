@@ -6,8 +6,8 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/kamogelosekhukhune777/multi-vendor-ecom/foundation/logger"
-	"github.com/kamogelosekhukhune777/multi-vendor-ecom/foundation/web"
+	"github.com/kamogelosekhukhune777/vendly/foundation/logger"
+	"github.com/kamogelosekhukhune777/vendly/foundation/web"
 )
 
 // Config contains all the mandatory systems required by handlers.

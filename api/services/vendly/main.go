@@ -13,10 +13,10 @@ import (
 	"time"
 
 	"github.com/ardanlabs/conf/v3"
-	"github.com/kamogelosekhukhune777/multi-vendor-ecom/api/services/vendly/all"
-	"github.com/kamogelosekhukhune777/multi-vendor-ecom/app/sdk/debug"
-	"github.com/kamogelosekhukhune777/multi-vendor-ecom/app/sdk/mux"
-	"github.com/kamogelosekhukhune777/multi-vendor-ecom/foundation/logger"
+	"github.com/kamogelosekhukhune777/vendly/api/services/vendly/all"
+	"github.com/kamogelosekhukhune777/vendly/app/sdk/debug"
+	"github.com/kamogelosekhukhune777/vendly/app/sdk/mux"
+	"github.com/kamogelosekhukhune777/vendly/foundation/logger"
 )
 
 var build = "develop"

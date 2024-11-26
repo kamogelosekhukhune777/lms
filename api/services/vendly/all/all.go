@@ -2,9 +2,9 @@
 package all
 
 import (
-	"github.com/kamogelosekhukhune777/multi-vendor-ecom/app/domain/testapp"
-	"github.com/kamogelosekhukhune777/multi-vendor-ecom/app/sdk/mux"
-	"github.com/kamogelosekhukhune777/multi-vendor-ecom/foundation/web"
+	"github.com/kamogelosekhukhune777/vendly/app/domain/testapp"
+	"github.com/kamogelosekhukhune777/vendly/app/sdk/mux"
+	"github.com/kamogelosekhukhune777/vendly/foundation/web"
 )
 
 // Routes constructs the add value which provides the implementation of
