@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/conf/v3"
+	"github.com/kamogelosekhukhune777/multi-vendor-ecom/api/services/vendly/all"
 	"github.com/kamogelosekhukhune777/multi-vendor-ecom/app/sdk/debug"
 	"github.com/kamogelosekhukhune777/multi-vendor-ecom/app/sdk/mux"
 	"github.com/kamogelosekhukhune777/multi-vendor-ecom/foundation/logger"
@@ -122,7 +123,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 		Log:   log,
 	}
 
-	webAPI := mux.WebAPI(cfgMux)
+	webAPI := mux.WebAPI(cfgMux, all.Routes())
 
 	api := http.Server{
 		Addr:         cfg.Web.APIHost,

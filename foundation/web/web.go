@@ -2,8 +2,13 @@ package web
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 )
+
+// A Handler is a type that handles a http request within our own little mini
+// framework.
+type Handler func(ctx context.Context, w http.ResponseWriter, r *http.Request) error
 
 // Logger represents a function that will be called to add information
 // to the logs.
@@ -25,4 +30,28 @@ func NewApp(log Logger) *App {
 		log:      log,
 		ServeMux: mux,
 	}
+}
+
+// HandlerFunc sets a handler function for a given HTTP method and path pair
+// to the application server mux.
+func (a *App) HandlerFunc(method string, group string, path string, handler Handler) {
+
+	h := func(w http.ResponseWriter, r *http.Request) {
+
+		ctx := context.Background()
+
+		if err := handler(ctx, w, r); err != nil {
+			a.log(ctx, "web-respond", "ERROR", err)
+			return
+		}
+
+	}
+
+	finalPath := path
+	if group != "" {
+		finalPath = "/" + group + path
+	}
+	finalPath = fmt.Sprintf("%s %s", method, finalPath)
+
+	a.ServeMux.HandleFunc(finalPath, h)
 }
