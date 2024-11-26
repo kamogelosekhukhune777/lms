@@ -33,6 +33,7 @@ func WebAPI(cfg Config, routeAdder RouteAdder) http.Handler {
 		logger,
 		mid.Logger(cfg.Log),
 		mid.Errors(cfg.Log),
+		mid.Metrics(),
 		mid.Panics(),
 	)
 

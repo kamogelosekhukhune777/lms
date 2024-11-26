@@ -6,6 +6,7 @@ import (
 	"runtime/debug"
 
 	"github.com/kamogelosekhukhune777/vendly/app/sdk/errs"
+	"github.com/kamogelosekhukhune777/vendly/app/sdk/metrics"
 	"github.com/kamogelosekhukhune777/vendly/foundation/web"
 )
 
@@ -22,7 +23,7 @@ func Panics() web.MidFunc {
 					trace := debug.Stack()
 					resp = errs.Newf(errs.InternalOnlyLog, "PANIC [%v] TRACE[%s]", rec, string(trace))
 
-					//metrics.AddPanics(ctx)
+					metrics.AddPanics(ctx)
 				}
 			}()
 
