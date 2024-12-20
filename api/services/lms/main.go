@@ -16,6 +16,8 @@ import (
 	"github.com/kamogelosekhukhune777/lms/api/services/lms/all"
 	"github.com/kamogelosekhukhune777/lms/app/sdk/debug"
 	"github.com/kamogelosekhukhune777/lms/app/sdk/mux"
+	"github.com/kamogelosekhukhune777/lms/business/sdk/migrate"
+	"github.com/kamogelosekhukhune777/lms/business/sdk/sqldb"
 	"github.com/kamogelosekhukhune777/lms/foundation/logger"
 )
 
@@ -67,14 +69,23 @@ func run(ctx context.Context, log *logger.Logger) error {
 			DebugHost          string        `conf:"default:0.0.0.0:3010"`
 			CORSAllowedOrigins []string      `conf:"default:*"`
 		}
+		DB struct {
+			User         string `conf:"default:postgres"`
+			Password     string `conf:"default:postgres,mask"`
+			Host         string `conf:"default:database-service"`
+			Name         string `conf:"default:postgres"`
+			MaxIdleConns int    `conf:"default:0"`
+			MaxOpenConns int    `conf:"default:0"`
+			DisableTLS   bool   `conf:"default:true"`
+		}
 	}{
 		Version: conf.Version{
 			Build: build,
-			Desc:  "vendly",
+			Desc:  "learnig management system",
 		},
 	}
 
-	const prefix = "VENDLY"
+	const prefix = "LMS"
 	help, err := conf.Parse(prefix, &cfg)
 	if err != nil {
 		if errors.Is(err, conf.ErrHelpWanted) {
@@ -98,6 +109,39 @@ func run(ctx context.Context, log *logger.Logger) error {
 	log.Info(ctx, "startup", "config", out)
 
 	expvar.NewString("build").Set(cfg.Build)
+
+	// -----------------------------------------------------------------------------------------------------------
+	// Database Support
+
+	log.Info(ctx, "startup", "status", "initializing database support", "hostport", cfg.DB.Host)
+
+	db, err := sqldb.Open(sqldb.Config{
+		User:         cfg.DB.User,
+		Password:     cfg.DB.Password,
+		Host:         cfg.DB.Host,
+		Name:         cfg.DB.Name,
+		MaxIdleConns: cfg.DB.MaxIdleConns,
+		MaxOpenConns: cfg.DB.MaxOpenConns,
+		DisableTLS:   cfg.DB.DisableTLS,
+	})
+	if err != nil {
+		return fmt.Errorf("connecting to db: %w", err)
+	}
+
+	defer db.Close()
+
+	// -----------------------------------------------------------------------------------------------------------
+	//Migration and Seeding data
+
+	// TODO: DO WE WANT THIS HERE!
+
+	if err := migrate.Migrate(ctx, db); err != nil {
+		return fmt.Errorf("migrating db: %w", err)
+	}
+
+	if err := migrate.Seed(ctx, db); err != nil {
+		return fmt.Errorf("seeding db: %w", err)
+	}
 
 	// -----------------------------------------------------------------------------------------------------------
 	// Start Debug Service
