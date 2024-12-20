@@ -5,9 +5,9 @@ import (
 	"math/rand"
 	"net/http"
 
-	"github.com/kamogelosekhukhune777/vendly/app/sdk/errs"
-	"github.com/kamogelosekhukhune777/vendly/foundation/logger"
-	"github.com/kamogelosekhukhune777/vendly/foundation/web"
+	"github.com/kamogelosekhukhune777/lms/app/sdk/errs"
+	"github.com/kamogelosekhukhune777/lms/foundation/logger"
+	"github.com/kamogelosekhukhune777/lms/foundation/web"
 )
 
 type app struct {

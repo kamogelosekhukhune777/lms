@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/kamogelosekhukhune777/vendly/app/sdk/errs"
-	"github.com/kamogelosekhukhune777/vendly/foundation/logger"
-	"github.com/kamogelosekhukhune777/vendly/foundation/web"
+	"github.com/kamogelosekhukhune777/lms/app/sdk/errs"
+	"github.com/kamogelosekhukhune777/lms/foundation/logger"
+	"github.com/kamogelosekhukhune777/lms/foundation/web"
 )
 
 // Logger writes information about the request to the logs.

@@ -6,9 +6,9 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/kamogelosekhukhune777/vendly/app/sdk/mid"
-	"github.com/kamogelosekhukhune777/vendly/foundation/logger"
-	"github.com/kamogelosekhukhune777/vendly/foundation/web"
+	"github.com/kamogelosekhukhune777/lms/app/sdk/mid"
+	"github.com/kamogelosekhukhune777/lms/foundation/logger"
+	"github.com/kamogelosekhukhune777/lms/foundation/web"
 )
 
 // Config contains all the mandatory systems required by handlers.

@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"path"
 
-	"github.com/kamogelosekhukhune777/vendly/app/sdk/errs"
-	"github.com/kamogelosekhukhune777/vendly/foundation/logger"
-	"github.com/kamogelosekhukhune777/vendly/foundation/web"
+	"github.com/kamogelosekhukhune777/lms/app/sdk/errs"
+	"github.com/kamogelosekhukhune777/lms/foundation/logger"
+	"github.com/kamogelosekhukhune777/lms/foundation/web"
 )
 
 // Errors handles errors coming out of the call chain.

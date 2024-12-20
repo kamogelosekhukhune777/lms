@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"runtime/debug"
 
-	"github.com/kamogelosekhukhune777/vendly/app/sdk/errs"
-	"github.com/kamogelosekhukhune777/vendly/app/sdk/metrics"
-	"github.com/kamogelosekhukhune777/vendly/foundation/web"
+	"github.com/kamogelosekhukhune777/lms/app/sdk/errs"
+	"github.com/kamogelosekhukhune777/lms/app/sdk/metrics"
+	"github.com/kamogelosekhukhune777/lms/foundation/web"
 )
 
 // Panics recovers from panics and converts the panic to an error so it is

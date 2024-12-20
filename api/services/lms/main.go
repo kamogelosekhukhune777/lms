@@ -13,10 +13,10 @@ import (
 	"time"
 
 	"github.com/ardanlabs/conf/v3"
-	"github.com/kamogelosekhukhune777/vendly/api/services/vendly/all"
-	"github.com/kamogelosekhukhune777/vendly/app/sdk/debug"
-	"github.com/kamogelosekhukhune777/vendly/app/sdk/mux"
-	"github.com/kamogelosekhukhune777/vendly/foundation/logger"
+	"github.com/kamogelosekhukhune777/lms/api/services/lms/all"
+	"github.com/kamogelosekhukhune777/lms/app/sdk/debug"
+	"github.com/kamogelosekhukhune777/lms/app/sdk/mux"
+	"github.com/kamogelosekhukhune777/lms/foundation/logger"
 )
 
 var build = "develop"

@@ -4,8 +4,8 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/kamogelosekhukhune777/vendly/app/sdk/metrics"
-	"github.com/kamogelosekhukhune777/vendly/foundation/web"
+	"github.com/kamogelosekhukhune777/lms/app/sdk/metrics"
+	"github.com/kamogelosekhukhune777/lms/foundation/web"
 )
 
 // Metrics updates program counters.

@@ -2,9 +2,9 @@
 package all
 
 import (
-	"github.com/kamogelosekhukhune777/vendly/app/domain/testapp"
-	"github.com/kamogelosekhukhune777/vendly/app/sdk/mux"
-	"github.com/kamogelosekhukhune777/vendly/foundation/web"
+	"github.com/kamogelosekhukhune777/lms/app/domain/testapp"
+	"github.com/kamogelosekhukhune777/lms/app/sdk/mux"
+	"github.com/kamogelosekhukhune777/lms/foundation/web"
 )
 
 // Routes constructs the add value which provides the implementation of
