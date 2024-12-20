@@ -1,0 +1,44 @@
+# Build the Go Binary.
+FROM golang:1.23 AS build_lms
+
+ENV CGO_ENABLED=0
+
+ARG BUILD_REF
+
+# Copy the source code into the container.
+COPY . /learning-management-system
+
+# Build the lms binary.
+WORKDIR /learning-management-system/api/services/lms
+RUN go build -o lms -ldflags "-X main.build=${BUILD_REF}"
+
+#======================================================================================================================
+
+# Run the Go Binary in Alpine.
+FROM alpine:3.20
+
+ARG BUILD_DATE
+ARG BUILD_REF
+
+# Add a non-root user and group.
+RUN addgroup -g 1000 -S lms && \
+    adduser -u 1000 -h /learning-management-system -G lms -S lms
+
+# Copy the binary from the build stage with the correct ownership.
+COPY --from=build_lms --chown=lms:lms /learning-management-system/api/services/lms/lms /learning-management-system/lms
+
+WORKDIR /learning-management-system
+
+# Ensure dependencies are installed.
+#RUN apk add --no-cache ca-certificates
+
+# Use the non-root user.
+USER lms
+
+# Add labels for metadata.
+LABEL org.opencontainers.image.created=${BUILD_DATE} \
+      org.opencontainers.image.revision=${BUILD_REF} \
+      org.opencontainers.image.source="https://github.com/kamogelosekhukhune777/lms"
+
+# Define the default command.
+CMD ["./lms"]
