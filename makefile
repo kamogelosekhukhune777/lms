@@ -1,18 +1,18 @@
 # ============================================================================================
-VENDLY_APP       := vendly
+LMS_APP          := lms
 BASE_IMAGE_NAME  := localhost/kamogelosekhukhune777
 VERSION          := 0.0.1
-VENDLY_IMAGE     := $(BASE_IMAGE_NAME)/$(VENDLY_APP):$(VERSION)
+VENDLY_IMAGE     := $(BASE_IMAGE_NAME)/$(LMS_APP):$(VERSION)
 
 # ============================================================================================
 # Building containers
 
-build: vendly
+build: lms
 
-vendly:
+lms:
 	docker build \
-		-f zarf/docker/dockerfile.vendly \
-		-t $(VENDLY_IMAGE) \
+		-f zarf/docker/dockerfile.lms \
+		-t $(LMS_IMAGE) \
 		--build-arg BUILD_REF=$(VERSION) \
 		--build-arg BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ") \
 		.
@@ -34,13 +34,13 @@ compose-logs:
 # ============================================================================================
 
 run:
-	go run api/services/vendly/main.go | go run api/tooling/logfmt/main.go
+	go run api/services/lms/main.go | go run api/tooling/logfmt/main.go
 
 version:
-	go run api/services/vendly/main.go --version
+	go run api/services/lms/main.go --version
 
 run-help:
-	go run api/services/vendly/main.go --help | go run api/tooling/logfmt/main.go
+	go run api/services/lms/main.go --help | go run api/tooling/logfmt/main.go
 
 # ============================================================================================
 # Metrics and Tracing
