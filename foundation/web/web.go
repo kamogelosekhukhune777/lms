@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
+
+	"github.com/google/uuid"
 )
 
 // A Handler is a type that handles a http request within our own little mini
@@ -42,7 +45,11 @@ func (a *App) HandlerFunc(method string, group string, path string, handler Hand
 
 	h := func(w http.ResponseWriter, r *http.Request) {
 
-		ctx := context.Background()
+		v := Values{
+			TraceID: uuid.NewString(),
+			Now:     time.Now().UTC(),
+		}
+		ctx := setValues(r.Context(), &v)
 
 		if err := handler(ctx, w, r); err != nil {
 			a.log(ctx, "web-respond", "ERROR", err)
