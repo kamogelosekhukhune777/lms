@@ -15,6 +15,7 @@ type User struct {
 	UserEmail    mail.Address
 	PasswordHash []byte
 	Roles        []role.Role
+	Enabled      bool
 }
 
 // NewUser contains information needed to create a new user.
@@ -23,4 +24,9 @@ type NewUser struct {
 	UserEmail mail.Address
 	Password  string
 	Roles     []role.Role
+}
+
+type LogInUser struct {
+	UserEmail mail.Address
+	Password  string
 }

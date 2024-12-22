@@ -5,7 +5,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/mail"
 
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/kamogelosekhukhune777/lms/business/domain/userbus"
 	"github.com/kamogelosekhukhune777/lms/business/sdk/sqldb"
@@ -30,7 +32,7 @@ func NewStore(log *logger.Logger, db *sqlx.DB) *Store {
 func (s *Store) Create(ctx context.Context, usr userbus.User) error {
 	const q = `
 INSERT INTO users
-	(user_id, user_name, user_email, password_hash, roles)
+	(user_id, user_name, user_email, password_hash, roles, enabled)
 VALUES
 	(:user_id, :name, :email, :password_hash, :roles)`
 
@@ -42,4 +44,56 @@ VALUES
 	}
 
 	return nil
+}
+
+func (s *Store) QueryByID(ctx context.Context, userID uuid.UUID) (userbus.User, error) {
+	data := struct {
+		ID string `db:"user_id"`
+	}{
+		ID: userID.String(),
+	}
+
+	const q = `
+	SELECT
+        user_id, user_name, user_email, password_hash, roles, enabled
+	FROM
+		users
+	WHERE 
+		user_id = :user_id`
+
+	var dbUsr user
+	if err := sqldb.NamedQueryStruct(ctx, s.log, s.db, q, data, &dbUsr); err != nil {
+		if errors.Is(err, sqldb.ErrDBNotFound) {
+			return userbus.User{}, fmt.Errorf("db: %w", userbus.ErrNotFound)
+		}
+		return userbus.User{}, fmt.Errorf("db: %w", err)
+	}
+
+	return toBusUser(dbUsr)
+}
+
+func (s *Store) QueryByEmail(ctx context.Context, email mail.Address) (userbus.User, error) {
+	data := struct {
+		Email string `db:"email"`
+	}{
+		Email: email.Address,
+	}
+
+	const q = `
+		SELECT
+	        user_id, username, email, roles, password_hash, enabled, date_created, date_updated
+		FROM
+			users
+		WHERE
+			email = :email`
+
+	var dbUsr user
+	if err := sqldb.NamedQueryStruct(ctx, s.log, s.db, q, data, &dbUsr); err != nil {
+		if errors.Is(err, sqldb.ErrDBNotFound) {
+			return userbus.User{}, fmt.Errorf("db: %w", userbus.ErrNotFound)
+		}
+		return userbus.User{}, fmt.Errorf("db: %w", err)
+	}
+
+	return toBusUser(dbUsr)
 }

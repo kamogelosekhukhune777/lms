@@ -5,7 +5,8 @@ CREATE TABLE users (
     user_name TEXT NOT NULL,
     user_email TEXT NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
-    roles []TEXT NOT NULL
+    roles []TEXT NOT NULL,
+    enabled BOOLEAN  NOT NULL,
     PRIMARY KEY (user_id)
 );
 
