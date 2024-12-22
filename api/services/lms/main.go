@@ -165,6 +165,8 @@ func run(ctx context.Context, log *logger.Logger) error {
 	cfgMux := mux.Config{
 		Build: build,
 		Log:   log,
+		DB:    db,
+		//Auth: ath,
 	}
 
 	webAPI := mux.WebAPI(cfgMux, all.Routes())

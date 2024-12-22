@@ -6,6 +6,8 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/jmoiron/sqlx"
+	"github.com/kamogelosekhukhune777/lms/app/sdk/auth"
 	"github.com/kamogelosekhukhune777/lms/app/sdk/mid"
 	"github.com/kamogelosekhukhune777/lms/foundation/logger"
 	"github.com/kamogelosekhukhune777/lms/foundation/web"
@@ -15,6 +17,8 @@ import (
 type Config struct {
 	Build string
 	Log   *logger.Logger
+	DB    *sqlx.DB
+	Auth  *auth.Auth
 }
 
 // RouteAdder defines behavior that sets the routes to bind for an instance
