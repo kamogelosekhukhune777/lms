@@ -1,3 +1,4 @@
+// Package userapp provides business access to product domain.
 package userapp
 
 import (
