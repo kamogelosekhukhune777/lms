@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/kamogelosekhukhune777/lms/business/domain/userbus"
+	"github.com/kamogelosekhukhune777/lms/business/sdk/sqldb"
 	"github.com/kamogelosekhukhune777/lms/foundation/logger"
 )
 
@@ -20,6 +21,7 @@ var (
 // Storer interface declares the behavior this package needs to persist and
 // retrieve data.
 type Storer interface {
+	NewWithTx(tx sqldb.CommitRollbacker) (Storer, error)
 	Create(ctx context.Context, cor Course) error
 	Update(ctx context.Context, cor Course) error
 	QueryAll(ctx context.Context) ([]Course, error)
@@ -48,17 +50,33 @@ func NewBusiness(log *logger.Logger, userBus *userbus.Business, storer Storer) *
 	return &b
 }
 
-func (b *Business) NewCourse(ctx context.Context, nc NewCourse) (Course, error) {
+// NewWithTx constructs a new business value that will use the
+// specified transaction in any store related calls.
+func (b *Business) NewWithTx(tx sqldb.CommitRollbacker) (*Business, error) {
+	storer, err := b.storer.NewWithTx(tx)
+	if err != nil {
+		return nil, err
+	}
+
+	bus := Business{
+		log:    b.log,
+		storer: storer,
+	}
+
+	return &bus, nil
+}
+
+func (b *Business) Create(ctx context.Context, nc NewCourse) (Course, error) {
 
 	now := time.Now()
 
-	//image saving
+	//image saving and video saving
 	//
 	//
 
 	cor := Course{
 		ID:              uuid.New(),
-		InstructorId:    nc.InstructorId,   //
+		InstructorID:    nc.InstructorID,   //
 		InstructorName:  nc.InstructorName, //
 		Date:            now,
 		Title:           nc.Title,
@@ -70,6 +88,8 @@ func (b *Business) NewCourse(ctx context.Context, nc NewCourse) (Course, error) 
 		Pricing:         nc.Pricing,
 		WelcomeMessage:  nc.WelcomeMessage,
 		Image:           nc.Image,
+		Curriculum:      nc.Curriculum,
+		Objectives:      nc.Objectives,
 	}
 
 	if err := b.storer.Create(ctx, cor); err != nil {
@@ -90,7 +110,7 @@ func (b *Business) GetAllCourses() ([]Course, error) {
 	return courses, nil
 }
 
-func (b *Business) GetCourseDetailsByID(ctx context.Context, id uuid.UUID) (Course, error) {
+func (b *Business) QueryByID(ctx context.Context, id uuid.UUID) (Course, error) {
 	cor, err := b.storer.QueryByID(ctx, id)
 	if err != nil {
 		return Course{}, fmt.Errorf("query: productID[%s]: %w", id, err)
@@ -99,7 +119,7 @@ func (b *Business) GetCourseDetailsByID(ctx context.Context, id uuid.UUID) (Cour
 	return cor, nil
 }
 
-func (b *Business) Update(ctx context.Context, cor Course, upc UpdateCousre) (Course, error) {
+func (b *Business) Update(ctx context.Context, cor Course, upc UpdateCourse) (Course, error) {
 
 	if upc.Title != nil {
 		cor.Title = *upc.Title
@@ -135,6 +155,18 @@ func (b *Business) Update(ctx context.Context, cor Course, upc UpdateCousre) (Co
 
 	if upc.Image != nil {
 		cor.Image = *upc.Image
+	}
+
+	if upc.Students != nil {
+		if !isNilOrEmpty(upc.Students) && !slicesEqualUnordered(cor.Students, upc.Students) {
+			cor.Students = upc.Students
+		}
+	}
+
+	if upc.Curriculum != nil {
+		if !isNilOrEmpty(upc.Curriculum) && !slicesEqualUnordered(cor.Curriculum, upc.Curriculum) {
+			cor.Curriculum = upc.Curriculum
+		}
 	}
 
 	err := b.storer.Update(ctx, cor)
