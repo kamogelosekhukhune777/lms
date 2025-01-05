@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/kamogelosekhukhune777/lms/app/sdk/errs"
 	"github.com/kamogelosekhukhune777/lms/app/sdk/mid"
 	"github.com/kamogelosekhukhune777/lms/business/domain/coursebus"
@@ -38,6 +39,77 @@ type Course struct {
 	Students        []string     `json:"students"`
 	Curriculum      []Curriculum `json:"curriculum"`
 	IsPublished     bool         `json:"isPublised"`
+}
+
+// LectureProgress represents progress on a specific lecture
+type LectureProgress struct {
+	LectureID  string    `json:"lecture_id"`
+	Viewed     bool      `json:"viewed"`
+	DateViewed time.Time `json:"date_viewed"`
+}
+
+// CourseProgress represents progress on a course for a user
+type CourseProgress struct {
+	UserID           string            `json:"user_id"`
+	CourseID         string            `json:"course_id"`
+	Completed        bool              `json:"completed"`
+	CompletionDate   time.Time         `json:"completion_date"`
+	LecturesProgress []LectureProgress `json:"lectures_progress"`
+}
+
+type MarkLectureData struct {
+	UserID    string `json:"userId"`
+	CourseID  string `json:"courseId"`
+	LectureID string `json:"lectureId"`
+}
+type ResetCourseProgress struct {
+	UserID   string `json:"userId"`
+	CourseID string `json:"courseId"`
+}
+
+func toBusResetCourseProgress(app ResetCourseProgress) (coursebus.ResetCourseProgress, error) {
+
+	userID, err := uuid.Parse(app.UserID)
+	if err != nil {
+		return coursebus.ResetCourseProgress{}, err
+	}
+
+	courseID, err := uuid.Parse(app.CourseID)
+	if err != nil {
+		return coursebus.ResetCourseProgress{}, err
+	}
+
+	bus := coursebus.ResetCourseProgress{
+		UserID:   userID,
+		CourseID: courseID,
+	}
+
+	return bus, nil
+}
+
+func toBusMarkLectureData(app MarkLectureData) (coursebus.MarkLectureData, error) {
+	userID, err := uuid.Parse(app.UserID)
+	if err != nil {
+		return coursebus.MarkLectureData{}, err
+	}
+
+	courseID, err := uuid.Parse(app.CourseID)
+	if err != nil {
+		return coursebus.MarkLectureData{}, err
+	}
+
+	lectureID, err := uuid.Parse(app.LectureID)
+	if err != nil {
+		return coursebus.MarkLectureData{}, err
+	}
+
+	bus := coursebus.MarkLectureData{
+		UserID:    userID,
+		CourseID:  courseID,
+		LectureID: lectureID,
+	}
+
+	return bus, nil
 }
 
 func toAppCourse(bus coursebus.Course) Course {

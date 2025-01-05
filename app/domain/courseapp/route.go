@@ -31,6 +31,12 @@ func Routes(app web.App, cfg Config) {
 	app.HandlerFunc(http.MethodPut, version, "/update/:id", api.update, authorizeCourse, transaction)
 
 	// Course Progress
+	app.HandlerFunc(http.MethodGet, version, "/get/:userId/:courseId", api.getCurrentCourseProgress)
+	app.HandlerFunc(http.MethodPost, version, "/mark-lecture-viewed", api.markCurrentLectureAsViewed)
+	app.HandlerFunc(http.MethodPost, version, "/reset-progress", api.resetCurrentCourseProgress)
 
 	// Student View Courses
+	//router.get("/get", getAllStudentViewCourses)
+	//router.get("/get/details/:id", getStudentViewCourseDetails)
+	//router.get("/purchase-info/:id/:studentId", checkCoursePurchaseInfo)
 }

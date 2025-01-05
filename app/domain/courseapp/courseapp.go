@@ -3,8 +3,10 @@ package courseapp
 
 import (
 	"context"
+	"errors"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/kamogelosekhukhune777/lms/app/sdk/errs"
 	"github.com/kamogelosekhukhune777/lms/app/sdk/mid"
 	"github.com/kamogelosekhukhune777/lms/business/domain/coursebus"
@@ -110,4 +112,72 @@ func (a *app) update(ctx context.Context, w http.ResponseWriter, r *http.Request
 	}
 
 	return web.Respond(ctx, w, toAppCourse(updCor), http.StatusOK)
+}
+
+//==========================================================================================================
+
+func (a *app) getCurrentCourseProgress(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	id := web.Param(r, "courseId")
+	if id != "" {
+		err := errors.New("course id does not exist")
+		return errs.New(errs.InvalidArgument, err)
+	}
+
+	courseID, err := uuid.Parse(id)
+	if err != nil {
+		return errs.New(errs.InvalidArgument, err) ///change eerors
+	}
+
+	id = web.Param(r, "userId")
+	if id != "" {
+		err := errors.New("user id does not exist")
+		return errs.New(errs.InvalidArgument, err)
+	}
+
+	userID, err := uuid.Parse(id)
+	if err != nil {
+		return errs.New(errs.InvalidArgument, err)
+	}
+
+	courseData, err := a.courseBus.GetCurrentCourseProgress(ctx, userID, courseID)
+	if err != nil {
+		return errs.New(errs.Internal, err)
+	}
+
+	return web.Respond(ctx, w, courseData, http.StatusOK)
+}
+
+func (a *app) resetCurrentCourseProgress(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	var app ResetCourseProgress
+	if err := web.Decode(r, &app); err != nil {
+		return errs.New(errs.InvalidArgument, err)
+	}
+
+	bus, err := toBusResetCourseProgress(app)
+	if err != nil {
+		return errs.New(errs.InvalidArgument, err)
+	}
+
+	if err := a.courseBus.ResetCourseProgress(ctx, bus.UserID, bus.CourseID); err != nil {
+		return errs.New(errs.Internal, err)
+	}
+
+	return web.Respond(ctx, w, app, http.StatusOK)
+}
+
+func (a *app) markCurrentLectureAsViewed(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	var app MarkLectureData
+	if err := web.Decode(r, &app); err != nil {
+		return errs.New(errs.InvalidArgument, err)
+	}
+
+	bus, err := toBusMarkLectureData(app)
+	if err != nil {
+		return errs.New(errs.InvalidArgument, err)
+	}
+
+	if err := a.courseBus.MarkLectureAsViewed(ctx, bus.UserID, bus.CourseID, bus.LectureID); err != nil {
+		return errs.New(errs.Internal, err)
+	}
+	return nil
 }
