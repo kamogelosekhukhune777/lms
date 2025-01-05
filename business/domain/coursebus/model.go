@@ -45,6 +45,33 @@ type Student struct {
 	PaidAmount   money.Money
 }
 
+// LectureProgress represents progress on a specific lecture
+type LectureProgress struct {
+	LectureID  uuid.UUID
+	Viewed     bool
+	DateViewed time.Time
+}
+
+// CourseProgress represents progress on a course for a user
+type CourseProgress struct {
+	UserID           uuid.UUID
+	CourseID         uuid.UUID
+	Completed        bool
+	CompletionDate   time.Time
+	LecturesProgress []LectureProgress
+}
+
+type MarkLectureData struct {
+	UserID    uuid.UUID
+	CourseID  uuid.UUID
+	LectureID uuid.UUID
+}
+
+type ResetCourseProgress struct {
+	UserID   uuid.UUID
+	CourseID uuid.UUID
+}
+
 //=================================================================================
 
 type NewCourse struct {

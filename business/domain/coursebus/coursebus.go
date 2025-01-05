@@ -26,6 +26,9 @@ type Storer interface {
 	Update(ctx context.Context, cor Course) error
 	QueryAll(ctx context.Context) ([]Course, error)
 	QueryByID(ctx context.Context, id uuid.UUID) (Course, error)
+	GetCurrentCourseProgress(ctx context.Context, userID, courseID uuid.UUID) (CourseProgress, error)
+	MarkLectureAsViewed(ctx context.Context, userID, courseID, lectureID uuid.UUID) error
+	ResetCourseProgress(ctx context.Context, userID, courseID uuid.UUID) error
 }
 
 // Business manages the set of APIs for product access.
@@ -175,4 +178,31 @@ func (b *Business) Update(ctx context.Context, cor Course, upc UpdateCourse) (Co
 	}
 
 	return cor, nil
+}
+
+func (b *Business) GetCurrentCourseProgress(ctx context.Context, userID, courseID uuid.UUID) (CourseProgress, error) {
+	data, err := b.storer.GetCurrentCourseProgress(ctx, userID, courseID)
+	if err != nil {
+		return CourseProgress{}, nil
+	}
+
+	return data, nil
+}
+
+func (b *Business) ResetCourseProgress(ctx context.Context, userID, courseID uuid.UUID) error {
+	err := b.storer.ResetCourseProgress(ctx, userID, courseID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (b *Business) MarkLectureAsViewed(ctx context.Context, userID, courseID, lectureID uuid.UUID) error {
+	err := b.storer.MarkLectureAsViewed(ctx, userID, courseID, lectureID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

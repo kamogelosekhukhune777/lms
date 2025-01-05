@@ -31,5 +31,5 @@ func slicesEqualUnordered[T any](a, b []T) bool {
 
 // Helper function to check if a slice is nil or empty
 func isNilOrEmpty[T any](s []T) bool {
-	return s == nil || len(s) == 0
+	return len(s) == 0
 }
