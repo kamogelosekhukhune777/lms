@@ -46,6 +46,20 @@ type course struct {
 	IsPublished     bool      `db:"is_published"`
 }
 
+type LectureProgress struct {
+	LectureID  string    `db:"lecture_id"`
+	Viewed     bool      `db:"viewed"`
+	DateViewed time.Time `db:"date_viewed"`
+}
+
+type CourseProgress struct {
+	UserID           string            `db:"user_id"`
+	CourseID         string            `db:"course_id"`
+	Completed        bool              `db:"completed"`
+	CompletionDate   time.Time         `db:"completion_date"`
+	LecturesProgress []LectureProgress `db:"lectures_progress"`
+}
+
 type curriculum struct {
 	CourseID  uuid.UUID `db:"course_id"`
 	LectureID uuid.UUID `db:"lecture_id"`

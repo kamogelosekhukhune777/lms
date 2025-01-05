@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -279,4 +280,126 @@ func (s *Store) QueryByID(ctx context.Context, courseID uuid.UUID) (coursebus.Co
 	course.Students = courseStudents
 
 	return course, nil
+}
+
+func (s *Store) GetCurrentCourseProgress(ctx context.Context, userID, courseID uuid.UUID) (coursebus.CourseProgress, error) {
+	data := struct {
+		UserID   uuid.UUID `db:"user_id"`
+		CourseID uuid.UUID `db:"course_id"`
+	}{
+		UserID:   userID,
+		CourseID: courseID,
+	}
+
+	//========================================================================================================
+
+	// Fetch the course progress
+	const qs = `
+		SELECT completed, completion_date
+		FROM CourseProgress
+		WHERE user_id = $1 AND course_id = $2`
+
+	type completionData struct {
+		Completed      bool      `db:"completed"`
+		CompletionDate time.Time `db:"completion_date"`
+	}
+
+	var dest completionData
+
+	if err := sqldb.NamedQueryStruct(ctx, s.log, s.db, qs, data, &dest); err != nil {
+		if errors.Is(err, sqldb.ErrDBNotFound) {
+			return coursebus.CourseProgress{}, fmt.Errorf("db: %w", coursebus.ErrNotFound)
+		}
+		return coursebus.CourseProgress{}, fmt.Errorf("db: %w", err)
+	}
+
+	//========================================================================================================
+	// Fetch lecture progress
+	const ql = `
+		SELECT lecture_id, viewed, date_viewed
+		FROM CourseProgressLectures
+		WHERE course_progress_id = (
+			SELECT id FROM CourseProgress WHERE user_id = $1 AND course_id = $2
+		)`
+
+	var dbLecPro []coursebus.LectureProgress
+
+	if err := sqldb.NamedQuerySlice(ctx, s.log, s.db, ql, data, &dbLecPro); err != nil {
+		if errors.Is(err, sqldb.ErrDBNotFound) {
+			return coursebus.CourseProgress{}, fmt.Errorf("db: %w", coursebus.ErrNotFound)
+		}
+		return coursebus.CourseProgress{}, fmt.Errorf("db: %w", err)
+	}
+
+	//========================================================================================================
+
+	dbCorPro := coursebus.CourseProgress{
+		UserID:           userID,
+		CourseID:         courseID,
+		Completed:        dest.Completed,
+		CompletionDate:   dest.CompletionDate,
+		LecturesProgress: dbLecPro,
+	}
+
+	return dbCorPro, nil
+}
+
+func (s *Store) MarkLectureAsViewed(ctx context.Context, userID, courseID, lectureID uuid.UUID) error {
+	data := struct {
+		DateViwed time.Time `db:"date_viewed"`
+		UserID    uuid.UUID `db:"user_id"`
+		CourseID  uuid.UUID `db:"course_id"`
+		LectureID uuid.UUID `db:"lecture_id"`
+	}{
+		UserID:    userID,
+		CourseID:  courseID,
+		LectureID: lectureID,
+		DateViwed: time.Now(),
+	}
+
+	const q = `
+		UPDATE CourseProgressLectures
+			SET viewed = TRUE, date_viewed = $1
+		WHERE course_progress_id = (
+			SELECT id FROM CourseProgress WHERE user_id = $2 AND course_id = $3
+		) AND lecture_id = $4`
+
+	if err := sqldb.NamedExecContext(ctx, s.log, s.db, q, data); err != nil {
+		return fmt.Errorf("namedexeccontext: %w", err)
+	}
+
+	return nil
+}
+
+func (s *Store) ResetCourseProgress(ctx context.Context, userID, courseID uuid.UUID) error {
+	data := struct {
+		UserID   uuid.UUID `db:"user_id"`
+		CourseID uuid.UUID `db:"course_id"`
+	}{
+		UserID:   userID,
+		CourseID: courseID,
+	}
+
+	// Reset course completion
+	const q = `
+		UPDATE CourseProgress
+		SET completed = FALSE, completion_date = NULL
+		WHERE user_id = $1 AND course_id = $2`
+
+	if err := sqldb.NamedExecContext(ctx, s.log, s.db, q, data); err != nil {
+		return fmt.Errorf("namedexeccontext: %w", err)
+	}
+
+	// Reset lectures progress
+	const ql = `
+		UPDATE CourseProgressLectures
+		SET viewed = FALSE, date_viewed = NULL
+		WHERE course_progress_id = (
+			SELECT id FROM CourseProgress WHERE user_id = $1 AND course_id = $2
+		)`
+	if err := sqldb.NamedExecContext(ctx, s.log, s.db, ql, data); err != nil {
+		return fmt.Errorf("namedexeccontext: %w", err)
+	}
+
+	return nil
 }
