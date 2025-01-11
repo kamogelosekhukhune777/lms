@@ -148,7 +148,7 @@ func (a *app) getCurrentCourseProgress(ctx context.Context, w http.ResponseWrite
 }
 
 func (a *app) resetCurrentCourseProgress(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	var app ResetCourseProgress
+	var app ResetCourseProgresParams
 	if err := web.Decode(r, &app); err != nil {
 		return errs.New(errs.InvalidArgument, err)
 	}
@@ -179,5 +179,6 @@ func (a *app) markCurrentLectureAsViewed(ctx context.Context, w http.ResponseWri
 	if err := a.courseBus.MarkLectureAsViewed(ctx, bus.UserID, bus.CourseID, bus.LectureID); err != nil {
 		return errs.New(errs.Internal, err)
 	}
-	return nil
+
+	return web.Respond(ctx, w, bus, http.StatusOK)
 }

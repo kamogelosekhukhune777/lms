@@ -62,24 +62,24 @@ type MarkLectureData struct {
 	CourseID  string `json:"courseId"`
 	LectureID string `json:"lectureId"`
 }
-type ResetCourseProgress struct {
+type ResetCourseProgresParams struct {
 	UserID   string `json:"userId"`
 	CourseID string `json:"courseId"`
 }
 
-func toBusResetCourseProgress(app ResetCourseProgress) (coursebus.ResetCourseProgress, error) {
+func toBusResetCourseProgress(app ResetCourseProgresParams) (coursebus.ResetCourseProgresParams, error) {
 
 	userID, err := uuid.Parse(app.UserID)
 	if err != nil {
-		return coursebus.ResetCourseProgress{}, err
+		return coursebus.ResetCourseProgresParams{}, err
 	}
 
 	courseID, err := uuid.Parse(app.CourseID)
 	if err != nil {
-		return coursebus.ResetCourseProgress{}, err
+		return coursebus.ResetCourseProgresParams{}, err
 	}
 
-	bus := coursebus.ResetCourseProgress{
+	bus := coursebus.ResetCourseProgresParams{
 		UserID:   userID,
 		CourseID: courseID,
 	}
@@ -112,7 +112,7 @@ func toBusMarkLectureData(app MarkLectureData) (coursebus.MarkLectureData, error
 	return bus, nil
 }
 
-func toAppCourse(bus coursebus.Course) Course {
+func toAppCourse(bus coursebus.CourseSchema) Course {
 	var curriculum []Curriculum
 	var students []string
 
@@ -124,9 +124,8 @@ func toAppCourse(bus coursebus.Course) Course {
 
 	if len(bus.Students) == 0 {
 		for _, student := range bus.Students {
-			studentStr := fmt.Sprintf("ID: %s, CourseID: %s, StudentID: %s, Name: %s, Email: %s, PaidAmount: %s",
-				student.ID.String(), student.CourseID.String(), student.StudentID.String(),
-				student.StudentName, student.StudentEmail, student.PaidAmount.String())
+			studentStr := fmt.Sprintf(" StudentID: %s, Name: %s, Email: %s, PaidAmount: %s",
+				student.StudentID.String(), student.StudentName, student.StudentEmail, student.PaidAmount.String())
 
 			students = append(students, studentStr)
 		}
@@ -136,7 +135,7 @@ func toAppCourse(bus coursebus.Course) Course {
 		InstructorID:    bus.InstructorID.String(),
 		InstructorName:  bus.InstructorName.String(),
 		Date:            bus.Date.Format(time.RFC3339),
-		Title:           bus.Title.String(),
+		Title:           bus.Title,
 		Category:        bus.Category,
 		Level:           bus.Level,
 		PrimaryLanguage: bus.PrimaryLanguage,
@@ -154,14 +153,14 @@ func toAppCourse(bus coursebus.Course) Course {
 
 func toAppLecture(bus coursebus.Lecture) Curriculum {
 	return Curriculum{
-		Title:       bus.Title.String(),
+		Title:       bus.Title,
 		VideoURL:    bus.VideoURL,
 		FreePreview: bus.FreePreview,
 		PublicID:    bus.PublicID,
 	}
 }
 
-func toAppCourses(cors []coursebus.Course) []Course {
+func toAppCourses(cors []coursebus.CourseSchema) []Course {
 	app := make([]Course, len(cors))
 	for i, cor := range cors {
 		app[i] = toAppCourse(cor)
@@ -199,26 +198,21 @@ func (app NewCourse) Validate() error {
 	return nil
 }
 
-func toBusNewCourse(ctx context.Context, app NewCourse) (coursebus.NewCourse, error) {
+func toBusNewCourse(ctx context.Context, app NewCourse) (coursebus.NewCourseSchema, error) {
 
 	instructorID, err := mid.GetInstructorID(ctx)
 	if err != nil {
-		return coursebus.NewCourse{}, fmt.Errorf("get instructor id: %w", err)
+		return coursebus.NewCourseSchema{}, fmt.Errorf("get instructor id: %w", err)
 	}
 
 	instructorName, err := name.Parse(app.InstructorName)
 	if err != nil {
-		return coursebus.NewCourse{}, fmt.Errorf("parse title: %w", err)
-	}
-
-	title, err := name.Parse(app.Title)
-	if err != nil {
-		return coursebus.NewCourse{}, fmt.Errorf("parse title: %w", err)
+		return coursebus.NewCourseSchema{}, fmt.Errorf("parse title: %w", err)
 	}
 
 	price, err := money.Parse(app.Pricing)
 	if err != nil {
-		return coursebus.NewCourse{}, fmt.Errorf("parse cost: %w", err)
+		return coursebus.NewCourseSchema{}, fmt.Errorf("parse cost: %w", err)
 	}
 
 	var curriculum []coursebus.Lecture
@@ -228,14 +222,14 @@ func toBusNewCourse(ctx context.Context, app NewCourse) (coursebus.NewCourse, er
 		if lec, err := toBusCurriculum(lecture); err == nil {
 			curriculum = append(curriculum, lec)
 		} else {
-			return coursebus.NewCourse{}, fmt.Errorf("invalid lecture: %w", err)
+			return coursebus.NewCourseSchema{}, fmt.Errorf("invalid lecture: %w", err)
 		}
 	}
 
-	bus := coursebus.NewCourse{
+	bus := coursebus.NewCourseSchema{
 		InstructorID:    instructorID,
 		InstructorName:  instructorName,
-		Title:           title,
+		Title:           app.Title,
 		Pricing:         price,
 		Category:        app.Category,
 		Level:           app.Level,
@@ -253,13 +247,9 @@ func toBusNewCourse(ctx context.Context, app NewCourse) (coursebus.NewCourse, er
 }
 
 func toBusCurriculum(app Curriculum) (coursebus.Lecture, error) {
-	title, err := name.Parse(app.Title)
-	if err != nil {
-		return coursebus.Lecture{}, fmt.Errorf("parse title: %w", err)
-	}
 
 	return coursebus.Lecture{
-		Title:       title,
+		Title:       app.Title,
 		VideoURL:    app.VideoURL,
 		FreePreview: app.FreePreview,
 		PublicID:    app.PublicID,
@@ -282,28 +272,19 @@ type UpdateCourse struct {
 	IsPublished     *bool    `json:"is_published" validate:"required"`
 }
 
-func toBusUpdateCourse(app UpdateCourse) (coursebus.UpdateCourse, error) {
-
-	var title *name.Name
-	if app.Title != nil {
-		nm, err := name.Parse(*app.Title)
-		if err != nil {
-			return coursebus.UpdateCourse{}, fmt.Errorf("parse: %w", err)
-		}
-		title = &nm
-	}
+func toBusUpdateCourse(app UpdateCourse) (coursebus.UpdateCourseSchema, error) {
 
 	var pricing *money.Money
 	if app.Pricing != nil {
 		price, err := money.Parse(*app.Pricing)
 		if err != nil {
-			return coursebus.UpdateCourse{}, fmt.Errorf("parse: %w", err)
+			return coursebus.UpdateCourseSchema{}, fmt.Errorf("parse: %w", err)
 		}
 		pricing = &price
 	}
 
-	bus := coursebus.UpdateCourse{
-		Title:           title,
+	bus := coursebus.UpdateCourseSchema{
+		Title:           app.Title,
 		Pricing:         pricing,
 		Category:        app.Category,
 		Level:           app.Level,
