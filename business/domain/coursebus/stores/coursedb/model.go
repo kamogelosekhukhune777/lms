@@ -2,6 +2,7 @@ package coursedb
 
 import (
 	"fmt"
+	"net/mail"
 	"time"
 
 	"github.com/google/uuid"
@@ -10,27 +11,36 @@ import (
 	"github.com/kamogelosekhukhune777/lms/business/types/name"
 )
 
+// LectureProgress represents progress for a specific lecture.
+type lectureProgress struct {
+	LectureID  uuid.UUID `db:"lecture_id"`
+	Viewed     bool      `db:"viewed"`
+	DateViewed time.Time `db:"date_viewed"`
+}
+
+// CourseProgress represents a student's progress for a course.
+type courseProgress struct {
+	ID               uuid.UUID         `db:"id"`
+	UserID           uuid.UUID         `db:"user_id"`
+	CourseID         uuid.UUID         `db:"course_id"`
+	Completed        bool              `db:"completed"`
+	CompletionDate   time.Time         `db:"completion_date"`
+	LecturesProgress []lectureProgress `db:"lectures_progress"` // Handle serialization for storing JSON-like data in SQL if needed
+}
+
+// Lecture represents an individual lecture in a course.
 type lecture struct {
-	ID          uuid.UUID `json:"lecture_id"`
-	Title       string    `json:"title"`
-	VideoURL    string    `json:"video_url"`
-	PublicID    string    `json:"public_id"`
-	FreePreview bool      `json:"free_preview"`
+	ID          uuid.UUID `db:"lecture_id"`
+	Title       string    `db:"title"`
+	VideoURL    string    `db:"video_url"`
+	PublicID    string    `db:"public_id"`
+	FreePreview bool      `db:"free_preview"`
 }
 
-// Student represents the schema for a student in a course.
-type student struct {
-	ID           uuid.UUID `db:"course_student_id"`
-	CourseID     uuid.UUID `db:"course_id"`
-	StudentID    uuid.UUID `db:"student_id"`
-	StudentName  string    `db:"student_name"`
-	StudentEmail string    `db:"student_email"`
-	PaidAmount   float64   `db:"paid_amount"`
-}
-
-type course struct {
-	ID              uuid.UUID `db:"course_id"`
-	InstructorId    uuid.UUID `db:"instructor_id"`
+// CourseSchema represents the schema for a course.
+type courseSchema struct {
+	ID              uuid.UUID `db:"id"`
+	InstructorID    uuid.UUID `db:"instructor_id"`
 	InstructorName  string    `db:"instructor_name"`
 	Date            time.Time `db:"date"`
 	Title           string    `db:"title"`
@@ -43,44 +53,31 @@ type course struct {
 	WelcomeMessage  string    `db:"welcome_message"`
 	Pricing         float64   `db:"pricing"`
 	Objectives      string    `db:"objectives"`
+	Students        []student `db:"students"`
+	Curriculum      []lecture `db:"curriculum"`
 	IsPublished     bool      `db:"is_published"`
 }
 
-type LectureProgress struct {
-	LectureID  string    `db:"lecture_id"`
-	Viewed     bool      `db:"viewed"`
-	DateViewed time.Time `db:"date_viewed"`
+// Student represents a student enrolled in a course.
+type student struct {
+	ID           uuid.UUID `db:"course_student_id"`
+	CourseID     uuid.UUID `db:"course_id"`
+	StudentID    uuid.UUID `db:"student_id"`
+	StudentName  string    `db:"student_name"`
+	StudentEmail string    `db:"student_email"`
+	PaidAmount   float64   `db:"paid_amount"`
 }
 
-type CourseProgress struct {
-	UserID           string            `db:"user_id"`
-	CourseID         string            `db:"course_id"`
-	Completed        bool              `db:"completed"`
-	CompletionDate   time.Time         `db:"completion_date"`
-	LecturesProgress []LectureProgress `db:"lectures_progress"`
-}
+//======================================================================================================================
+//toDB(database)
 
-type curriculum struct {
-	CourseID  uuid.UUID `db:"course_id"`
-	LectureID uuid.UUID `db:"lecture_id"`
-}
-
-func toDBCurriculum(lectureID, courseID uuid.UUID) curriculum {
-	db := curriculum{
-		CourseID:  courseID,
-		LectureID: lectureID,
-	}
-
-	return db
-}
-
-func toDBCourse(bus coursebus.Course) course {
-	db := course{
+func toDBCourseSchema(bus coursebus.CourseSchema) courseSchema {
+	return courseSchema{
 		ID:              bus.ID,
-		InstructorId:    bus.InstructorID,
+		InstructorID:    bus.InstructorID,
 		InstructorName:  bus.InstructorName.String(),
-		Date:            bus.Date.UTC(),
-		Title:           bus.Title.String(),
+		Date:            bus.Date,
+		Title:           bus.Title,
 		Category:        bus.Category,
 		Level:           bus.Level,
 		PrimaryLanguage: bus.PrimaryLanguage,
@@ -92,57 +89,50 @@ func toDBCourse(bus coursebus.Course) course {
 		Objectives:      bus.Objectives,
 		IsPublished:     bus.IsPublished,
 	}
-
-	return db
 }
 
-func toDBLecture(bus coursebus.Lecture) lecture {
-	db := lecture{
-		ID:          bus.ID,
-		Title:       bus.Title.String(),
-		VideoURL:    bus.VideoURL,
-		FreePreview: bus.FreePreview,
-		PublicID:    bus.PublicID,
+func toDBStudent(db coursebus.Student) student {
+	return student{
+		StudentID:    db.StudentID,
+		StudentName:  db.StudentName.String(),
+		StudentEmail: db.StudentEmail.String(),
+		PaidAmount:   db.PaidAmount.Value(),
 	}
 
-	return db
 }
 
-func toDBStudent(bus coursebus.Student) student {
-	db := student{
-		ID:           bus.ID,
-		CourseID:     bus.CourseID,
-		StudentID:    bus.StudentID,
-		StudentEmail: bus.StudentEmail,
-		PaidAmount:   bus.PaidAmount.Value(),
+func toDBLecture(db coursebus.Lecture) lecture {
+
+	return lecture{
+		Title:       db.Title,
+		VideoURL:    db.VideoURL,
+		PublicID:    db.PublicID,
+		FreePreview: db.FreePreview,
 	}
-
-	return db
 }
 
-func toBusCourse(db course) (coursebus.Course, error) {
+// ======================================================================================================================
+// toBusiness from db
 
-	title, err := name.Parse(db.Title)
+func toBusCourseSchema(db courseSchema) (coursebus.CourseSchema, error) {
+	name, err := name.Parse(db.InstructorName)
 	if err != nil {
-		return coursebus.Course{}, fmt.Errorf("parse title: %w", err)
-	}
-
-	instructorName, err := name.Parse(db.InstructorName)
-	if err != nil {
-		return coursebus.Course{}, fmt.Errorf("parse title: %w", err)
+		return coursebus.CourseSchema{}, fmt.Errorf("parse: %w", err)
 	}
 
 	price, err := money.Parse(db.Pricing)
 	if err != nil {
-		return coursebus.Course{}, fmt.Errorf("parse pricing: %w", err)
+		return coursebus.CourseSchema{}, fmt.Errorf("parse: %w", err)
 	}
 
-	bus := coursebus.Course{
+	//students and lectures
+
+	bus := coursebus.CourseSchema{
 		ID:              db.ID,
-		InstructorID:    db.InstructorId,
-		InstructorName:  instructorName,
+		InstructorID:    db.ID,
+		InstructorName:  name,
 		Date:            db.Date,
-		Title:           title,
+		Title:           db.Title,
 		Category:        db.Category,
 		Level:           db.Level,
 		PrimaryLanguage: db.PrimaryLanguage,
@@ -159,40 +149,67 @@ func toBusCourse(db course) (coursebus.Course, error) {
 }
 
 func toBusLecture(db lecture) (coursebus.Lecture, error) {
-	title, err := name.Parse(db.Title)
-	if err != nil {
-		return coursebus.Lecture{}, fmt.Errorf("parse title: %w", err)
-	}
-
 	bus := coursebus.Lecture{
-		ID:          db.ID,
-		Title:       title,
+		Title:       db.Title,
 		VideoURL:    db.VideoURL,
-		FreePreview: db.FreePreview,
 		PublicID:    db.PublicID,
+		FreePreview: db.FreePreview,
 	}
 
 	return bus, nil
 }
 
 func toBusStudent(db student) (coursebus.Student, error) {
-	studentName, err := name.Parse(db.StudentName)
+	name, err := name.Parse(db.StudentName)
 	if err != nil {
-		return coursebus.Student{}, fmt.Errorf("parse title: %w", err)
+		return coursebus.Student{}, nil
 	}
 
-	paidAmount, err := money.Parse(db.PaidAmount)
+	email := mail.Address{
+		Address: db.StudentEmail,
+	}
+
+	money, err := money.Parse(db.PaidAmount)
 	if err != nil {
-		return coursebus.Student{}, fmt.Errorf("parse pricing: %w", err)
+		return coursebus.Student{}, nil
 	}
 
 	bus := coursebus.Student{
-		ID:           db.ID,
-		CourseID:     db.CourseID,
 		StudentID:    db.StudentID,
-		StudentName:  studentName,
-		StudentEmail: db.StudentEmail,
-		PaidAmount:   paidAmount,
+		StudentName:  name,
+		StudentEmail: email,
+		PaidAmount:   money,
+	}
+
+	return bus, nil
+}
+
+//======================================================================================================================
+//toBusiness(slices)
+
+func toBusCoursesSchema(dbs []courseSchema) ([]coursebus.CourseSchema, error) {
+	bus := make([]coursebus.CourseSchema, len(dbs))
+
+	for i, db := range dbs {
+		var err error
+		bus[i], err = toBusCourseSchema(db)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return bus, nil
+}
+
+func toBusLectures(dbs []lecture) ([]coursebus.Lecture, error) {
+	bus := make([]coursebus.Lecture, len(dbs))
+
+	for i, db := range dbs {
+		var err error
+		bus[i], err = toBusLecture(db)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return bus, nil
@@ -212,33 +229,18 @@ func toBusStudents(dbs []student) ([]coursebus.Student, error) {
 	return bus, nil
 }
 
-func toBusLectures(dbls []lecture) ([]coursebus.Lecture, error) {
-	bus := make([]coursebus.Lecture, len(dbls))
+// ()
 
-	for i, dbl := range dbls {
-		var err error
-		bus[i], err = toBusLecture(dbl)
-		if err != nil {
-			return nil, err
-		}
+func toBusLectureProgress(dbs []lectureProgress) []coursebus.LectureProgress {
+	bus := make([]coursebus.LectureProgress, len(dbs))
+
+	for _, db := range dbs {
+		bus = append(bus, coursebus.LectureProgress{
+			LectureID:  db.LectureID,
+			Viewed:     db.Viewed,
+			DateViewed: db.DateViewed,
+		})
 	}
 
-	return bus, nil
+	return bus
 }
-
-func toBusCourses(dbs []course) ([]coursebus.Course, error) {
-	bus := make([]coursebus.Course, len(dbs))
-
-	for i, db := range dbs {
-		var err error
-		bus[i], err = toBusCourse(db)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return bus, nil
-}
-
-//===============================================================================
-//===============================================================================

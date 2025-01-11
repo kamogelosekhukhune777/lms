@@ -33,15 +33,15 @@ func GetInstructorID(ctx context.Context) (uuid.UUID, error) {
 	return v, nil
 }
 
-func setCourse(ctx context.Context, cor coursebus.Course) context.Context {
+func setCourse(ctx context.Context, cor coursebus.CourseSchema) context.Context {
 	return context.WithValue(ctx, courseKey, cor)
 }
 
 // GetCourse returns the user from the context.
-func GetCourse(ctx context.Context) (coursebus.Course, error) {
-	v, ok := ctx.Value(courseKey).(coursebus.Course)
+func GetCourse(ctx context.Context) (coursebus.CourseSchema, error) {
+	v, ok := ctx.Value(courseKey).(coursebus.CourseSchema)
 	if !ok {
-		return coursebus.Course{}, errors.New("cousre not found in context")
+		return coursebus.CourseSchema{}, errors.New("cousre not found in context")
 	}
 
 	return v, nil

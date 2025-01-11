@@ -1,6 +1,7 @@
 package coursebus
 
 import (
+	"net/mail"
 	"time"
 
 	"github.com/google/uuid"
@@ -8,12 +9,38 @@ import (
 	"github.com/kamogelosekhukhune777/lms/business/types/name"
 )
 
-type Course struct {
+// LectureProgress represents progress for a specific lecture.
+type LectureProgress struct {
+	LectureID  uuid.UUID
+	Viewed     bool
+	DateViewed time.Time
+}
+
+// CourseProgress represents a student's progress for a course.
+type CourseProgress struct {
+	ID               uuid.UUID
+	UserID           uuid.UUID
+	CourseID         uuid.UUID
+	Completed        bool
+	CompletionDate   time.Time
+	LecturesProgress []LectureProgress
+}
+
+// Lecture represents an individual lecture in a course.
+type Lecture struct {
+	Title       string
+	VideoURL    string
+	PublicID    string
+	FreePreview bool
+}
+
+// CourseSchema represents the schema for a course.
+type CourseSchema struct {
 	ID              uuid.UUID
 	InstructorID    uuid.UUID
 	InstructorName  name.Name
 	Date            time.Time
-	Title           name.Name
+	Title           string
 	Category        string
 	Level           string
 	PrimaryLanguage string
@@ -28,56 +55,32 @@ type Course struct {
 	IsPublished     bool
 }
 
-type Lecture struct {
-	ID          uuid.UUID
-	Title       name.Name
-	VideoURL    string
-	FreePreview bool
-	PublicID    string
-}
-
+// Student represents a student enrolled in a course.
 type Student struct {
-	ID           uuid.UUID
-	CourseID     uuid.UUID
 	StudentID    uuid.UUID
 	StudentName  name.Name
-	StudentEmail string
+	StudentEmail mail.Address
 	PaidAmount   money.Money
 }
 
-// LectureProgress represents progress on a specific lecture
-type LectureProgress struct {
-	LectureID  uuid.UUID
-	Viewed     bool
-	DateViewed time.Time
-}
-
-// CourseProgress represents progress on a course for a user
-type CourseProgress struct {
-	UserID           uuid.UUID
-	CourseID         uuid.UUID
-	Completed        bool
-	CompletionDate   time.Time
-	LecturesProgress []LectureProgress
-}
+//===
 
 type MarkLectureData struct {
 	UserID    uuid.UUID
 	CourseID  uuid.UUID
 	LectureID uuid.UUID
 }
-
-type ResetCourseProgress struct {
+type ResetCourseProgresParams struct {
 	UserID   uuid.UUID
 	CourseID uuid.UUID
 }
 
 //=================================================================================
 
-type NewCourse struct {
+type NewCourseSchema struct {
 	InstructorID    uuid.UUID
 	InstructorName  name.Name
-	Title           name.Name
+	Title           string
 	Category        string
 	Level           string
 	PrimaryLanguage string
@@ -103,14 +106,14 @@ type NewStudent struct {
 	CourseID     uuid.UUID
 	StudentID    uuid.UUID
 	StudentName  name.Name
-	StudentEmail string
+	StudentEmail mail.Address
 	PaidAmount   money.Money
 }
 
 //=================================================================================
 
-type UpdateCourse struct {
-	Title           *name.Name
+type UpdateCourseSchema struct {
+	Title           *string
 	Category        *string
 	Level           *string
 	PrimaryLanguage *string
@@ -124,7 +127,7 @@ type UpdateCourse struct {
 }
 
 type UpdateLecture struct {
-	Title       *name.Name
+	Title       *string
 	VideoURL    *string
 	FreePreview *bool
 	PublicID    *string
@@ -134,6 +137,6 @@ type UpdateStudent struct {
 	CourseID     *uuid.UUID
 	StudentID    *uuid.UUID
 	StudentName  *name.Name
-	StudentEmail *string
+	StudentEmail *mail.Address
 	PaidAmount   *money.Money
 }

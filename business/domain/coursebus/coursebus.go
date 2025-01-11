@@ -22,10 +22,10 @@ var (
 // retrieve data.
 type Storer interface {
 	NewWithTx(tx sqldb.CommitRollbacker) (Storer, error)
-	Create(ctx context.Context, cor Course) error
-	Update(ctx context.Context, cor Course) error
-	QueryAll(ctx context.Context) ([]Course, error)
-	QueryByID(ctx context.Context, id uuid.UUID) (Course, error)
+	Create(ctx context.Context, cor CourseSchema) error
+	Update(ctx context.Context, cor CourseSchema) error
+	QueryAll(ctx context.Context) ([]CourseSchema, error)
+	QueryByID(ctx context.Context, id uuid.UUID) (CourseSchema, error)
 	GetCurrentCourseProgress(ctx context.Context, userID, courseID uuid.UUID) (CourseProgress, error)
 	MarkLectureAsViewed(ctx context.Context, userID, courseID, lectureID uuid.UUID) error
 	ResetCourseProgress(ctx context.Context, userID, courseID uuid.UUID) error
@@ -69,7 +69,7 @@ func (b *Business) NewWithTx(tx sqldb.CommitRollbacker) (*Business, error) {
 	return &bus, nil
 }
 
-func (b *Business) Create(ctx context.Context, nc NewCourse) (Course, error) {
+func (b *Business) Create(ctx context.Context, nc NewCourseSchema) (CourseSchema, error) {
 
 	now := time.Now()
 
@@ -77,7 +77,7 @@ func (b *Business) Create(ctx context.Context, nc NewCourse) (Course, error) {
 	//
 	//
 
-	cor := Course{
+	cor := CourseSchema{
 		ID:              uuid.New(),
 		InstructorID:    nc.InstructorID,   //
 		InstructorName:  nc.InstructorName, //
@@ -96,33 +96,33 @@ func (b *Business) Create(ctx context.Context, nc NewCourse) (Course, error) {
 	}
 
 	if err := b.storer.Create(ctx, cor); err != nil {
-		return Course{}, fmt.Errorf("create: %w", err)
+		return CourseSchema{}, fmt.Errorf("create: %w", err)
 	}
 
 	return cor, nil
 }
 
-func (b *Business) GetAllCourses() ([]Course, error) {
+func (b *Business) GetAllCourses() ([]CourseSchema, error) {
 	ctx := context.Background()
 
 	courses, err := b.storer.QueryAll(ctx)
 	if err != nil {
-		return []Course{}, err
+		return []CourseSchema{}, err
 	}
 
 	return courses, nil
 }
 
-func (b *Business) QueryByID(ctx context.Context, id uuid.UUID) (Course, error) {
+func (b *Business) QueryByID(ctx context.Context, id uuid.UUID) (CourseSchema, error) {
 	cor, err := b.storer.QueryByID(ctx, id)
 	if err != nil {
-		return Course{}, fmt.Errorf("query: productID[%s]: %w", id, err)
+		return CourseSchema{}, fmt.Errorf("query: productID[%s]: %w", id, err)
 	}
 
 	return cor, nil
 }
 
-func (b *Business) Update(ctx context.Context, cor Course, upc UpdateCourse) (Course, error) {
+func (b *Business) Update(ctx context.Context, cor CourseSchema, upc UpdateCourseSchema) (CourseSchema, error) {
 
 	if upc.Title != nil {
 		cor.Title = *upc.Title
@@ -174,7 +174,7 @@ func (b *Business) Update(ctx context.Context, cor Course, upc UpdateCourse) (Co
 
 	err := b.storer.Update(ctx, cor)
 	if err != nil {
-		return Course{}, fmt.Errorf("update: %w", err)
+		return CourseSchema{}, fmt.Errorf("update: %w", err)
 	}
 
 	return cor, nil
