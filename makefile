@@ -59,7 +59,7 @@ statsviz:
 # shortcuts 
 
 run:
-	go run api/services/lms/main.go | go run api/tooling/logfmt/main.go
+	go run api/services/lms-api/main.go | go run api/tooling/logfmt/main.go
 
 # ==========================================================================================
 # Modules support

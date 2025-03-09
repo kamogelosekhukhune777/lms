@@ -30,5 +30,7 @@ func WebAPI(cfg Config, routeAdder RouteAdder) http.Handler {
 
 	app := web.NewApp(logger)
 
+	routeAdder.Add(app, cfg)
+
 	return app
 }
