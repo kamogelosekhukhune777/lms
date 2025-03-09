@@ -2,11 +2,17 @@ package main
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"os"
 	"runtime"
+	"time"
 
+	"github.com/ardanlabs/conf/v3"
 	"github.com/kamogelosekhukhune777/lms/foundation/logger"
 )
+
+var build = "develop"
 
 func main() {
 	var log *logger.Logger
@@ -39,6 +45,37 @@ func run(ctx context.Context, log *logger.Logger) error {
 	// GOMAXPROCS
 
 	log.Info(ctx, "startup", "GOMAXPROCS", runtime.GOMAXPROCS(0))
+
+	// -------------------------------------------------------------------------
+	// Configuration
+
+	cfg := struct {
+		conf.Version
+		Web struct {
+			ReadTimeout        time.Duration `conf:"default:5s"`
+			WriteTimeout       time.Duration `conf:"default:10s"`
+			IdleTimeout        time.Duration `conf:"default:120s"`
+			ShutdownTimeout    time.Duration `conf:"default:20s"`
+			APIHost            string        `conf:"default:0.0.0.0:3000"`
+			DebugHost          string        `conf:"default:0.0.0.0:3010"`
+			CORSAllowedOrigins []string      `conf:"default:*"`
+		}
+	}{
+		Version: conf.Version{
+			Build: build,
+			Desc:  "learning management system...",
+		},
+	}
+
+	const prefix = "LMS"
+	help, err := conf.Parse(prefix, &cfg)
+	if err != nil {
+		if errors.Is(err, conf.ErrHelpWanted) {
+			fmt.Println(help)
+			return nil
+		}
+		return fmt.Errorf("parsing config: %w", err)
+	}
 
 	return nil
 }
