@@ -16,8 +16,14 @@ type Config struct {
 	Log   *logger.Logger
 }
 
+// RouteAdder defines behavior that sets the routes to bind for an instance
+// of the service.
+type RouteAdder interface {
+	Add(app *web.App, cfg Config)
+}
+
 // WebAPI constructs a http.Handler with all application routes bound.
-func WebAPI(cfg Config) http.Handler {
+func WebAPI(cfg Config, routeAdder RouteAdder) http.Handler {
 	logger := func(ctx context.Context, msg string, args ...any) {
 		cfg.Log.Info(ctx, msg, args...)
 	}

@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/conf/v3"
+	"github.com/kamogelosekhukhune777/lms/api/services/lms-api/build/all"
 	"github.com/kamogelosekhukhune777/lms/app/sdk/debug"
 	"github.com/kamogelosekhukhune777/lms/app/sdk/mux"
 	"github.com/kamogelosekhukhune777/lms/foundation/logger"
@@ -118,9 +119,11 @@ func run(ctx context.Context, log *logger.Logger) error {
 
 	cfgMux := mux.Config{
 		Build: build,
+		Log:   log,
 	}
 
-	webAPI := mux.WebAPI(cfgMux)
+	webAPI := mux.WebAPI(cfgMux,
+		buildRoutes())
 
 	api := http.Server{
 		Addr:         cfg.Web.APIHost,
@@ -160,4 +163,9 @@ func run(ctx context.Context, log *logger.Logger) error {
 	}
 
 	return nil
+}
+
+func buildRoutes() mux.RouteAdder {
+
+	return all.Routes()
 }
