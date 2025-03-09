@@ -14,7 +14,10 @@
 # Hitting endpoints
 
 # ==========================================================================================
-# Class Stuff
+# shortcuts 
+
+run:
+	go run api/services/lms/main.go | go run api/tooling/logfmt/main.go
 
 # ==========================================================================================
 # Modules support
