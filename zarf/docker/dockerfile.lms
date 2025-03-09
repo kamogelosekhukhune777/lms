@@ -31,7 +31,7 @@ COPY --from=build_lms --chown=lms:lms /learning-management-system/api/services/l
 WORKDIR /learning-management-system
 
 # Use the non-root user.
-USER hms
+USER lms
 
 # Define the default command.
 CMD ["./lms"]
