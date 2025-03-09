@@ -27,10 +27,11 @@ type Logger func(ctx context.Context, msg string, args ...any)
 type App struct {
 	log Logger
 	*http.ServeMux
+	mw []MidFunc
 }
 
 // NewApp creates an App value that handle a set of routes for the application.
-func NewApp(log Logger) *App {
+func NewApp(log Logger, mw ...MidFunc) *App {
 	// Create an OpenTelemetry HTTP Handler which wraps our router. This will start
 	// the initial span and annotate it with information about the request/trusted.
 	//
@@ -43,12 +44,15 @@ func NewApp(log Logger) *App {
 	return &App{
 		log:      log,
 		ServeMux: mux,
+		mw:       mw,
 	}
 }
 
 // HandlerFunc sets a handler function for a given HTTP method and path pair
 // to the application server mux.
-func (a *App) HandlerFunc(method string, group string, path string, handlerFunc HandlerFunc) {
+func (a *App) HandlerFunc(method string, group string, path string, handlerFunc HandlerFunc, mw ...MidFunc) {
+	handlerFunc = wrapMiddleware(mw, handlerFunc)
+	handlerFunc = wrapMiddleware(a.mw, handlerFunc)
 
 	h := func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.Background()
