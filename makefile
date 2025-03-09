@@ -20,6 +20,17 @@ lms:
 # ==========================================================================================
 # Docker Compose
 
+compose-up:
+	cd ./zarf/compose/ && docker compose -f docker_compose.yaml -p compose up -d
+
+compose-build-up: build compose-up
+
+compose-down:
+	cd ./zarf/compose/ && docker compose -f docker_compose.yaml down
+
+compose-logs:
+	cd ./zarf/compose/ && docker compose -f docker_compose.yaml logs
+
 # ==========================================================================================
 # Metrics and Tracing
 

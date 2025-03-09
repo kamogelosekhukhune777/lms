@@ -1,0 +1,21 @@
+services:
+  lms:
+    image: localhost/kamogelosekhukhune777/lms:0.0.1
+    pull_policy: never
+    container_name: lms
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+      - "3010:3010"
+    environment:
+      GOMAXPROCS: 2
+    networks:
+      threadly-system-network:
+        ipv4_address: 10.5.0.15
+
+networks:
+  threadly-system-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.5.0.0/24s
