@@ -6,6 +6,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/kamogelosekhukhune777/lms/app/sdk/mid"
 	"github.com/kamogelosekhukhune777/lms/foundation/logger"
 	"github.com/kamogelosekhukhune777/lms/foundation/web"
 )
@@ -28,7 +29,10 @@ func WebAPI(cfg Config, routeAdder RouteAdder) http.Handler {
 		cfg.Log.Info(ctx, msg, args...)
 	}
 
-	app := web.NewApp(logger)
+	app := web.NewApp(
+		logger,
+		mid.Logger(cfg.Log),
+	)
 
 	routeAdder.Add(app, cfg)
 
