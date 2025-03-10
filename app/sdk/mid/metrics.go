@@ -3,6 +3,8 @@ package mid
 import (
 	"context"
 	"net/http"
+
+	"github.com/kamogelosekhukhune777/lms/app/sdk/metrics"
 	"github.com/kamogelosekhukhune777/lms/foundation/web"
 )
 

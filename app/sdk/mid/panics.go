@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"runtime/debug"
 
-	"github.com/ardanlabs/service/app/api/metrics"
 	"github.com/kamogelosekhukhune777/lms/app/sdk/errs"
+	"github.com/kamogelosekhukhune777/lms/app/sdk/metrics"
 	"github.com/kamogelosekhukhune777/lms/foundation/web"
 )
 

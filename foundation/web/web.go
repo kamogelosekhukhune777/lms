@@ -5,6 +5,8 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+
+	"github.com/google/uuid"
 )
 
 // Encoder defines behavior that can encode a data model and provide
@@ -32,12 +34,6 @@ type App struct {
 
 // NewApp creates an App value that handle a set of routes for the application.
 func NewApp(log Logger, mw ...MidFunc) *App {
-	// Create an OpenTelemetry HTTP Handler which wraps our router. This will start
-	// the initial span and annotate it with information about the request/trusted.
-	//
-	// This is configured to use the W3C TraceContext standard to set the remote
-	// parent if a client request includes the appropriate headers.
-	// https://w3c.github.io/trace-context/
 
 	mux := http.NewServeMux()
 
@@ -55,7 +51,11 @@ func (a *App) HandlerFunc(method string, group string, path string, handlerFunc 
 	handlerFunc = wrapMiddleware(a.mw, handlerFunc)
 
 	h := func(w http.ResponseWriter, r *http.Request) {
-		ctx := context.Background()
+		v := Values{
+			TraceID: uuid.NewString(),
+		}
+		ctx := setValues(r.Context(), &v)
+		ctx = setWriter(ctx, w)
 
 		resp := handlerFunc(ctx, r)
 

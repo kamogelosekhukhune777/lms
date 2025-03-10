@@ -17,6 +17,7 @@ import (
 	"github.com/kamogelosekhukhune777/lms/app/sdk/debug"
 	"github.com/kamogelosekhukhune777/lms/app/sdk/mux"
 	"github.com/kamogelosekhukhune777/lms/foundation/logger"
+	"github.com/kamogelosekhukhune777/lms/foundation/web"
 )
 
 var build = "develop"
@@ -31,7 +32,7 @@ func main() {
 	}
 
 	traceIDFn := func(ctx context.Context) string {
-		return ""
+		return web.GetTraceID(ctx)
 	}
 
 	log = logger.NewWithEvents(os.Stdout, logger.LevelInfo, "LMS-API", traceIDFn, events)
