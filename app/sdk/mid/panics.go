@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"runtime/debug"
 
+	"github.com/ardanlabs/service/app/api/metrics"
 	"github.com/kamogelosekhukhune777/lms/app/sdk/errs"
 	"github.com/kamogelosekhukhune777/lms/foundation/web"
 )
@@ -22,6 +23,7 @@ func Panics() web.MidFunc {
 					trace := debug.Stack()
 					resp = errs.Newf(errs.InternalOnlyLog, "PANIC [%v] TRACE[%s]", rec, string(trace))
 
+					metrics.AddPanics(ctx)
 				}
 			}()
 
