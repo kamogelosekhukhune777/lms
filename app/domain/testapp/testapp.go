@@ -34,3 +34,16 @@ func (a *app) testError(ctx context.Context, r *http.Request) web.Encoder {
 
 	return app
 }
+
+func (a *app) testPanic(ctx context.Context, r *http.Request) web.Encoder {
+
+	if n := rand.Intn(100); n%2 == 0 {
+		panic("WE ARE PANICKING!!!")
+	}
+
+	app := Test{
+		Status: "OK",
+	}
+
+	return app
+}
