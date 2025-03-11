@@ -3,6 +3,7 @@ LMS_APP         := lms
 BASE_IMAGE_NAME := localhost/kamogelosekhukhune777
 VERSION         := 0.0.1
 LMS_IMAGE       := $(BASE_IMAGE_NAME)/$(LMS_APP):$(VERSION)
+BUILD_DATE      := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 # ==========================================================================================
 # Building containers
@@ -14,7 +15,7 @@ lms:
 		-f zarf/docker/dockerfile.lms \
 		-t $(LMS_IMAGE) \
 		--build-arg BUILD_REF=$(VERSION) \
-		--build-arg BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ") \
+		--build-arg BUILD_DATE=$(BUILD_DATE) \
 		.
 
 # ==========================================================================================
@@ -27,6 +28,9 @@ compose-build-up: build compose-up
 
 compose-down:
 	cd ./zarf/compose/ && docker compose -f docker_compose.yaml down
+
+compose-down-v:
+	cd ./zarf/compose/ && docker compose -f docker_compose.yaml down -v
 
 compose-logs:
 	cd ./zarf/compose/ && docker compose -f docker_compose.yaml logs

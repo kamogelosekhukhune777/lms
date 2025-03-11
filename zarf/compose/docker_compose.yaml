@@ -1,4 +1,26 @@
 services:
+  database-service:
+    image: postgres:16.4
+    container_name: database
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h localhost -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    cpu_count: 2
+    volumes:
+      - database:/var/lib/postgresql/data
+    networks:
+      threadly-system-network:
+        ipv4_address: 10.5.0.2
+
   lms:
     image: localhost/kamogelosekhukhune777/lms:0.0.1
     pull_policy: never
@@ -9,13 +31,25 @@ services:
       - "3010:3010"
     environment:
       GOMAXPROCS: 2
+      LMS_DB_USER: postgres
+      LMS_DB_PASSWORD: postgres
+      #database-service
+      LMS_DB_HOST: database
+      LMS_DB_NAME: postgres
+      LMS_DB_DISABLE_TLS: "true"
     networks:
       threadly-system-network:
         ipv4_address: 10.5.0.15
+    depends_on:
+      database-service:
+        condition: service_healthy
+
+volumes:
+  database:
 
 networks:
   threadly-system-network:
     driver: bridge
     ipam:
       config:
-        - subnet: 10.5.0.0/24s
+        - subnet: 10.5.0.0/24

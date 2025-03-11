@@ -1,7 +1,7 @@
 -- Version: 1.01
 -- Description: Create table users
 CREATE TABLE Users (
-    user_id UUID PRIMARY KEY,
+    user_id UUID PRIMARY KEY NOT NULL,
     user_name VARCHAR(255) NOT NULL,
     user_email VARCHAR(255) UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
@@ -12,7 +12,7 @@ CREATE TABLE Users (
 -- Version: 1.02
 -- Courses Table
 CREATE TABLE Courses (
-    course_id UUID PRIMARY KEY,
+    course_id UUID PRIMARY KEY NOT NULL,
     instructor_id UUID NOT NULL,
     title VARCHAR(255) NOT NULL,
     category VARCHAR(100),
@@ -32,7 +32,7 @@ CREATE TABLE Courses (
 -- Version: 1.03
 -- Lectures Table
 CREATE TABLE Lectures (
-    lecture_id UUID PRIMARY KEY,
+    lecture_id UUID PRIMARY KEY NOT NULL,
     course_id UUID NOT NULL,
     title VARCHAR(255) NOT NULL,
     video_url TEXT NOT NULL,
@@ -44,7 +44,7 @@ CREATE TABLE Lectures (
 -- Version: 1.04
 -- Enrollments Table (Students enrolled in courses)
 CREATE TABLE Enrollments (
-    enrollment_id UUID PRIMARY KEY,
+    enrollment_id UUID PRIMARY KEY NOT NULL,
     student_id UUID NOT NULL,
     course_id UUID NOT NULL,
     paid_amount DECIMAL(10,2) NOT NULL,
@@ -56,11 +56,11 @@ CREATE TABLE Enrollments (
 -- Version: 1.05
 -- Orders Table
 CREATE TABLE Orders (
-    order_id UUID PRIMARY KEY,
+    order_id UUID PRIMARY KEY NOT NULL,
     user_id UUID NOT NULL,
-    order_status VARCHAR(50) NOT NULL CHECK (order_status IN ('pending', 'completed', 'failed', 'refunded')),
-    payment_method VARCHAR(50) NOT NULL CHECK (payment_method IN ('credit_card', 'paypal', 'stripe', 'bank_transfer')),
-    payment_status VARCHAR(50) NOT NULL CHECK (payment_status IN ('paid', 'unpaid', 'refunded')),
+    order_status VARCHAR(50) NOT NULL,
+    payment_method VARCHAR(50) NOT NULL,
+    payment_status VARCHAR(50) NOT NULL,
     order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     payment_id VARCHAR(255),
     payer_id VARCHAR(255),
@@ -75,7 +75,7 @@ CREATE TABLE Orders (
 -- Version: 1.06
 -- Course Progress Table
 CREATE TABLE CourseProgress (
-    progress_id UUID PRIMARY KEY,
+    progress_id UUID PRIMARY KEY NOT NULL,
     user_id UUID NOT NULL,
     course_id UUID NOT NULL,
     completed BOOLEAN DEFAULT FALSE,
@@ -87,7 +87,7 @@ CREATE TABLE CourseProgress (
 -- Version: 1.07
 -- Lecture Progress Table
 CREATE TABLE LectureProgress (
-    progress_id UUID PRIMARY KEY,
+    lecture_progress_id UUID PRIMARY KEY NOT NULL,
     user_id UUID NOT NULL,
     lecture_id UUID NOT NULL,
     viewed BOOLEAN DEFAULT FALSE,
