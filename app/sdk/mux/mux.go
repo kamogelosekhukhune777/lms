@@ -7,14 +7,20 @@ import (
 	"net/http"
 
 	"github.com/kamogelosekhukhune777/lms/app/sdk/mid"
+	"github.com/kamogelosekhukhune777/lms/business/domain/userbus"
 	"github.com/kamogelosekhukhune777/lms/foundation/logger"
 	"github.com/kamogelosekhukhune777/lms/foundation/web"
 )
 
+type BusConfig struct {
+	UserBus *userbus.Business
+}
+
 // Config contains all the mandatory systems required by handlers.
 type Config struct {
-	Build string
-	Log   *logger.Logger
+	Build     string
+	Log       *logger.Logger
+	BusConfig BusConfig
 }
 
 // RouteAdder defines behavior that sets the routes to bind for an instance
