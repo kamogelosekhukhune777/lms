@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/kamogelosekhukhune777/lms/business/domain/userbus"
+	"github.com/kamogelosekhukhune777/lms/business/domain/userbus/stores/userdb"
 	"github.com/kamogelosekhukhune777/lms/foundation/logger"
 )
 
@@ -46,7 +47,7 @@ type Auth struct {
 func New(cfg Config) (*Auth, error) {
 	var userBus *userbus.Business
 	if cfg.DB != nil {
-		userBus = userbus.NewBusiness(cfg.Log, nil)
+		userBus = userbus.NewBusiness(cfg.Log, userdb.NewStore(cfg.Log, cfg.DB))
 	}
 
 	a := Auth{

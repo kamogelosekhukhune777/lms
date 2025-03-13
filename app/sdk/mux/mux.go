@@ -6,6 +6,8 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/jmoiron/sqlx"
+	"github.com/kamogelosekhukhune777/lms/app/sdk/auth"
 	"github.com/kamogelosekhukhune777/lms/app/sdk/mid"
 	"github.com/kamogelosekhukhune777/lms/business/domain/userbus"
 	"github.com/kamogelosekhukhune777/lms/foundation/logger"
@@ -20,6 +22,8 @@ type BusConfig struct {
 type Config struct {
 	Build     string
 	Log       *logger.Logger
+	DB        *sqlx.DB
+	Auth      *auth.Auth
 	BusConfig BusConfig
 }
 
