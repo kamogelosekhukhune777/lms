@@ -3,6 +3,7 @@ package all
 
 import (
 	"github.com/kamogelosekhukhune777/lms/app/domain/testapp"
+	"github.com/kamogelosekhukhune777/lms/app/domain/userapp"
 	"github.com/kamogelosekhukhune777/lms/app/sdk/mux"
 	"github.com/kamogelosekhukhune777/lms/foundation/web"
 )
@@ -19,4 +20,10 @@ type add struct{}
 func (add) Add(app *web.App, cfg mux.Config) {
 
 	testapp.Routes(app)
+
+	userapp.Routes(app, userapp.Config{
+		Log:     cfg.Log,
+		UserBus: cfg.BusConfig.UserBus,
+		Auth:    cfg.Auth,
+	})
 }

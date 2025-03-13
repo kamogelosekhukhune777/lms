@@ -13,9 +13,12 @@ import (
 	"time"
 
 	"github.com/ardanlabs/conf/v3"
-	"github.com/kamogelosekhukhune777/lms/api/services/lms-api/build/all"
+	"github.com/kamogelosekhukhune777/lms/api/services/lms-api/all"
+	"github.com/kamogelosekhukhune777/lms/app/sdk/auth"
 	"github.com/kamogelosekhukhune777/lms/app/sdk/debug"
 	"github.com/kamogelosekhukhune777/lms/app/sdk/mux"
+	"github.com/kamogelosekhukhune777/lms/business/domain/userbus"
+	"github.com/kamogelosekhukhune777/lms/business/domain/userbus/stores/userdb"
 	"github.com/kamogelosekhukhune777/lms/business/sdk/migrate"
 	"github.com/kamogelosekhukhune777/lms/business/sdk/sqldb"
 	"github.com/kamogelosekhukhune777/lms/foundation/logger"
@@ -79,6 +82,10 @@ func run(ctx context.Context, log *logger.Logger) error {
 			MaxOpenConns int    `conf:"default:0"`
 			DisableTLS   bool   `conf:"default:true"`
 		}
+		Auth struct {
+			Issuer string `conf:"default:lms project"`
+			Secret string `conf:"default:lms_jwt_secret,mask"`
+		}
 	}{
 		Version: conf.Version{
 			Build: build,
@@ -141,6 +148,26 @@ func run(ctx context.Context, log *logger.Logger) error {
 	}
 
 	// -------------------------------------------------------------------------
+	// Initialize authentication support
+
+	authCfg := auth.Config{
+		Log:    log,
+		DB:     db,
+		Secret: cfg.Auth.Secret,
+		Issuer: cfg.Auth.Issuer,
+	}
+
+	ath, err := auth.New(authCfg)
+	if err != nil {
+		return fmt.Errorf("constructing auth: %w", err)
+	}
+
+	// -------------------------------------------------------------------------
+	// Create Business Packages
+
+	userBus := userbus.NewBusiness(log, userdb.NewStore(log, db))
+
+	// -------------------------------------------------------------------------
 	// Start Debug Service
 
 	go func() {
@@ -162,6 +189,11 @@ func run(ctx context.Context, log *logger.Logger) error {
 	cfgMux := mux.Config{
 		Build: build,
 		Log:   log,
+		DB:    db,
+		Auth:  ath,
+		BusConfig: mux.BusConfig{
+			UserBus: userBus,
+		},
 	}
 
 	webAPI := mux.WebAPI(cfgMux,
