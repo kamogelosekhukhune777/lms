@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/mail"
 	"time"
 
 	"github.com/google/uuid"
@@ -24,12 +25,21 @@ var (
 type Storer interface {
 	Create(ctx context.Context, usr User) error
 	QueryByID(ctx context.Context, userID uuid.UUID) (User, error)
+	QueryByEmail(ctx context.Context, email mail.Address) (User, error)
 }
 
 // Business manages the set of APIs for user access.
 type Business struct {
 	log    *logger.Logger
 	storer Storer
+}
+
+// NewBusiness constructs a user business API for use.
+func NewBusiness(log *logger.Logger, storer Storer) *Business {
+	return &Business{
+		log:    log,
+		storer: storer,
+	}
 }
 
 // Create adds a new user to the system.
@@ -66,4 +76,30 @@ func (b *Business) QueryByID(ctx context.Context, userID uuid.UUID) (User, error
 	}
 
 	return user, nil
+}
+
+// QueryByEmail finds the user by a specified user email.
+func (b *Business) QueryByEmail(ctx context.Context, email mail.Address) (User, error) {
+	user, err := b.storer.QueryByEmail(ctx, email)
+	if err != nil {
+		return User{}, fmt.Errorf("query: email[%s]: %w", email, err)
+	}
+
+	return user, nil
+}
+
+// Authenticate finds a user by their email and verifies their password. On
+// success it returns a Claims User representing this user. The claims can be
+// used to generate a token for future authentication.
+func (b *Business) Authenticate(ctx context.Context, email mail.Address, password string) (User, error) {
+	usr, err := b.QueryByEmail(ctx, email)
+	if err != nil {
+		return User{}, fmt.Errorf("query: email[%s]: %w", email, err)
+	}
+
+	if err := bcrypt.CompareHashAndPassword(usr.PasswordHash, []byte(password)); err != nil {
+		return User{}, fmt.Errorf("comparehashandpassword: %w", ErrAuthenticationFailure)
+	}
+
+	return usr, nil
 }
