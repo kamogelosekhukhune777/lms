@@ -118,3 +118,7 @@ func (a *Auth) Authorize(ctx context.Context, claims Claims, userID uuid.UUID, r
 
 	return nil
 }
+
+func (a *Auth) Issuer() string {
+	return a.issuer
+}

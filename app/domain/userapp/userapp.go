@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 	"net/mail"
+	"time"
 
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/kamogelosekhukhune777/lms/app/sdk/auth"
@@ -48,9 +49,13 @@ func (a *app) create(ctx context.Context, r *http.Request) web.Encoder {
 	claims := auth.Claims{
 		Roles: []string{"USER"},
 		RegisteredClaims: jwt.RegisteredClaims{
-			Subject: usr.ID.String(),
+			Subject:   usr.ID.String(),
+			Issuer:    a.auth.Issuer(),
+			ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(100 * time.Hour)),
+			IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
 		},
 	}
+
 	token, err := a.auth.GenerateToken(claims)
 	if err != nil {
 		return errs.Newf(errs.Internal, "create: failed to generate token: %s", err)
@@ -80,13 +85,16 @@ func (a *app) logIn(ctx context.Context, r *http.Request) web.Encoder {
 		return errs.Newf(errs.Internal, "logIn: failed to authenticate user: %s", err)
 	}
 
-	// --- NEW CODE: Generate a token for the authenticated user ---
 	claims := auth.Claims{
 		Roles: []string{"USER"},
 		RegisteredClaims: jwt.RegisteredClaims{
-			Subject: usr.ID.String(),
+			Subject:   usr.ID.String(),
+			Issuer:    a.auth.Issuer(),
+			ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(100 * time.Hour)),
+			IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
 		},
 	}
+
 	token, err := a.auth.GenerateToken(claims)
 	if err != nil {
 		return errs.Newf(errs.Internal, "logIn: failed to generate token: %s", err)
