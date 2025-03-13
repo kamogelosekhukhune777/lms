@@ -68,6 +68,13 @@ func Respond(ctx context.Context, w http.ResponseWriter, resp Encoder) error {
 	}
 
 	w.Header().Set("Content-Type", contentType)
+	//Set any extra headers (such as Authorization) from the response ---
+	if wh, ok := resp.(interface{ Headers() map[string]string }); ok {
+		for k, v := range wh.Headers() {
+			w.Header().Set(k, v)
+		}
+	}
+
 	w.WriteHeader(statusCode)
 
 	if _, err := w.Write(data); err != nil {
