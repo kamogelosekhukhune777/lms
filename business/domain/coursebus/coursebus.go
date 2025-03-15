@@ -1,0 +1,183 @@
+// Package coursebus provides business access to course domain.
+package coursebus
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/kamogelosekhukhune777/lms/business/domain/userbus"
+	"github.com/kamogelosekhukhune777/lms/business/sdk/sqldb"
+	"github.com/kamogelosekhukhune777/lms/foundation/logger"
+)
+
+// Set of error variables for CRUD operations.
+var (
+	ErrNotFound    = errors.New("course not found")
+	ErrInvalidCost = errors.New("cost not valid")
+)
+
+// Storer interface declares the behavior this package needs to persist and
+// retrieve data.
+type Storer interface {
+	NewWithTx(tx sqldb.CommitRollbacker) (Storer, error)
+	Create(ctx context.Context, cor Course) error
+	Update(ctx context.Context, cor Course) error
+	QueryByID(ctx context.Context, courseID uuid.UUID) (Course, error)
+	QueryAll(ctx context.Context) ([]Course, error)
+}
+
+// Business manages the set of APIs for product access.
+type Business struct {
+	log     *logger.Logger
+	userBus *userbus.Business
+	storer  Storer
+}
+
+// NewBusiness constructs a product business API for use.
+func NewBusiness(log *logger.Logger, userBus *userbus.Business, storer Storer) *Business {
+	b := Business{
+		log:     log,
+		userBus: userBus,
+		storer:  storer,
+	}
+
+	return &b
+}
+
+// NewWithTx constructs a new business value that will use the
+// specified transaction in any store related calls.
+func (b *Business) NewWithTx(tx sqldb.CommitRollbacker) (*Business, error) {
+	storer, err := b.storer.NewWithTx(tx)
+	if err != nil {
+		return nil, err
+	}
+
+	userBus, err := b.userBus.NewWithTx(tx)
+	if err != nil {
+		return nil, err
+	}
+
+	bus := Business{
+		log:     b.log,
+		userBus: userBus,
+		storer:  storer,
+	}
+
+	return &bus, nil
+}
+
+// Create adds a new Course to the system.
+func (b *Business) Create(ctx context.Context, np NewCourse) (Course, error) {
+
+	/*
+		image saving
+	*/
+
+	usr, err := b.userBus.QueryByID(ctx, np.InstructorID)
+	if err != nil {
+		return Course{}, fmt.Errorf("course.querybyid: %s: %w", np.InstructorID, err)
+	}
+
+	now := time.Now()
+
+	cor := Course{
+		ID:              uuid.New(),
+		InstructorID:    usr.ID,
+		Title:           np.Title,
+		Category:        np.Category,
+		Level:           np.Level,
+		PrimaryLanguage: np.PrimaryLanguage,
+		Subtitle:        np.Subtitle,
+		Description:     np.Description,
+		Image:           np.Image,
+		WelcomeMessage:  np.WelcomeMessage,
+		Pricing:         np.Pricing,
+		Objectives:      np.Objectives,
+		IsPublished:     true,
+		CreatedAt:       now,
+	}
+
+	if err := b.storer.Create(ctx, cor); err != nil {
+		return Course{}, fmt.Errorf("create: %w", err)
+	}
+
+	return cor, nil
+}
+
+// Update modifies information about a Course.
+func (b *Business) Update(ctx context.Context, cor Course, upc UpdateCourse) (Course, error) {
+	if upc.Title != nil {
+		cor.Title = *upc.Title
+	}
+
+	if upc.Category != nil {
+		cor.Category = *upc.Category
+	}
+
+	if upc.Level != nil {
+		cor.Level = *upc.Level
+	}
+
+	if upc.PrimaryLanguage != nil {
+		cor.PrimaryLanguage = *upc.PrimaryLanguage
+	}
+
+	if upc.Subtitle != nil {
+		cor.Subtitle = *upc.Subtitle
+	}
+
+	if upc.Description != nil {
+		cor.Description = *upc.Description
+	}
+
+	if upc.Image != nil {
+		cor.Image = *upc.Image
+	}
+
+	if upc.WelcomeMessage != nil {
+		cor.WelcomeMessage = *upc.WelcomeMessage
+	}
+
+	if upc.Pricing != nil {
+		cor.Pricing = *upc.Pricing
+	}
+
+	if upc.Objectives != nil {
+		cor.Objectives = *upc.Objectives
+	}
+
+	/*if upc.IsPublished != nil {
+		cor.IsPublished = *upc.Ispublished
+	}*/
+
+	if err := b.storer.Update(ctx, cor); err != nil {
+		return Course{}, fmt.Errorf("update: %w", err)
+	}
+
+	return cor, nil
+}
+
+// QueryByID finds the course by the specified ID.
+func (b *Business) QueryByID(ctx context.Context, courseID uuid.UUID) (Course, error) {
+
+	cor, err := b.storer.QueryByID(ctx, courseID)
+	if err != nil {
+		return Course{}, fmt.Errorf("query: courseID[%s]: %w", courseID, err)
+	}
+
+	return cor, nil
+}
+
+func (b *Business) QueryAll(ctx context.Context) ([]Course, error) {
+	cors, err := b.storer.QueryAll(ctx)
+	if err != nil {
+		return []Course{}, fmt.Errorf("query: %w", err)
+	}
+
+	return cors, nil
+}
+
+//==================================================================================================================
