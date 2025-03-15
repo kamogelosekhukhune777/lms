@@ -28,6 +28,22 @@ func NewStore(log *logger.Logger, db *sqlx.DB) *Store {
 	}
 }
 
+// NewWithTx constructs a new Store value replacing the sqlx DB
+// value with a sqlx DB value that is currently inside a transaction.
+func (s *Store) NewWithTx(tx sqldb.CommitRollbacker) (userbus.Storer, error) {
+	ec, err := sqldb.GetExtContext(tx)
+	if err != nil {
+		return nil, err
+	}
+
+	store := Store{
+		log: s.log,
+		db:  ec,
+	}
+
+	return &store, nil
+}
+
 func (s *Store) Create(ctx context.Context, usr userbus.User) error {
 	const q = `
 	INSERT INTO Users

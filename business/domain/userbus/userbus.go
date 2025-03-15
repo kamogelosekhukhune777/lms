@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/kamogelosekhukhune777/lms/business/sdk/sqldb"
 	"github.com/kamogelosekhukhune777/lms/foundation/logger"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -23,6 +24,7 @@ var (
 // Storer interface declares the behavior this package needs to persist and
 // retrieve data.
 type Storer interface {
+	NewWithTx(tx sqldb.CommitRollbacker) (Storer, error)
 	Create(ctx context.Context, usr User) error
 	QueryByID(ctx context.Context, userID uuid.UUID) (User, error)
 	QueryByEmail(ctx context.Context, email mail.Address) (User, error)
@@ -40,6 +42,22 @@ func NewBusiness(log *logger.Logger, storer Storer) *Business {
 		log:    log,
 		storer: storer,
 	}
+}
+
+// NewWithTx constructs a new business value that will use the
+// specified transaction in any store related calls.
+func (b *Business) NewWithTx(tx sqldb.CommitRollbacker) (*Business, error) {
+	storer, err := b.storer.NewWithTx(tx)
+	if err != nil {
+		return nil, err
+	}
+
+	bus := Business{
+		log:    b.log,
+		storer: storer,
+	}
+
+	return &bus, nil
 }
 
 // Create adds a new user to the system.
