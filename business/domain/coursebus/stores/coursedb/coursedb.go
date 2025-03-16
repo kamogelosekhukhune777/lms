@@ -124,3 +124,41 @@ func (s *Store) QueryAll(ctx context.Context) ([]coursebus.Course, error) {
 }
 
 //=============================================================================================================================
+
+// =============================================================================================================================
+
+func (s *Store) GetCoursesByStudentID(ctx context.Context, studentID uuid.UUID) ([]coursebus.Course, error) {
+
+	data := struct {
+		ID string `db:"user_id"`
+	}{
+		ID: studentID.String(),
+	}
+
+	const q = `
+	SELECT 
+		c.course_id,
+		c.title,
+		c.category,
+		c.level,
+		c.primary_language,
+		c.subtitle,
+		c.description,
+		c.image,
+		c.welcome_message,
+		c.pricing,
+		c.objectives,
+		c.is_published,
+		c.created_at,
+		e.enrolled_at
+	FROM Enrollments e
+		JOIN Courses c ON e.course_id = c.course_id
+	WHERE e.student_id = :user_id`
+
+	var dbPrds []course
+	if err := sqldb.NamedQuerySlice(ctx, s.log, s.db, q, data, &dbPrds); err != nil {
+		return nil, fmt.Errorf("namedqueryslice: %w", err)
+	}
+
+	return toBusCourses(dbPrds)
+}
