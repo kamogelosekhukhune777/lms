@@ -27,6 +27,7 @@ type Storer interface {
 	Update(ctx context.Context, cor Course) error
 	QueryByID(ctx context.Context, courseID uuid.UUID) (Course, error)
 	QueryAll(ctx context.Context) ([]Course, error)
+	GetCoursesByStudentID(ctx context.Context, studentId uuid.UUID) ([]Course, error)
 }
 
 // Business manages the set of APIs for product access.
@@ -181,3 +182,20 @@ func (b *Business) QueryAll(ctx context.Context) ([]Course, error) {
 }
 
 //==================================================================================================================
+
+func (b *Business) GetAllStudentViewCourses(ctx context.Context) {}
+
+func (b *Business) GetStudentViewCourseDetails(ctx context.Context) {}
+
+func (b *Business) CheckCoursePurchaseInfo(ctx context.Context) {}
+
+//==================================================================================================================
+
+func (b *Business) GetCoursesByStudentID(ctx context.Context, studentId uuid.UUID) ([]Course, error) {
+	cors, err := b.storer.GetCoursesByStudentID(ctx, studentId)
+	if err != nil {
+		return []Course{}, fmt.Errorf("query: %w", err)
+	}
+
+	return cors, nil
+}
