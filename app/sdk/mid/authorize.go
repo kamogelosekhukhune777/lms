@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/kamogelosekhukhune777/lms/app/sdk/errs"
 	"github.com/kamogelosekhukhune777/lms/business/domain/coursebus"
+	"github.com/kamogelosekhukhune777/lms/business/domain/userbus"
 	"github.com/kamogelosekhukhune777/lms/foundation/web"
 )
 
@@ -37,6 +38,42 @@ func GetCourseByID(courseBus *coursebus.Business) web.MidFunc {
 				}
 
 				ctx = setCourse(ctx, prd)
+			}
+
+			return next(ctx, r)
+		}
+
+		return h
+	}
+
+	return m
+}
+
+func GetUserByID(userBus *userbus.Business) web.MidFunc {
+	m := func(next web.HandlerFunc) web.HandlerFunc {
+		h := func(ctx context.Context, r *http.Request) web.Encoder {
+			id := web.Param(r, "user_id")
+
+			var userID uuid.UUID
+
+			if id != "" {
+				var err error
+				userID, err = uuid.Parse(id)
+				if err != nil {
+					return errs.New(errs.Unauthenticated, ErrInvalidID)
+				}
+
+				usr, err := userBus.QueryByID(ctx, userID)
+				if err != nil {
+					switch {
+					case errors.Is(err, userbus.ErrNotFound):
+						return errs.New(errs.Unauthenticated, err)
+					default:
+						return errs.Newf(errs.Unauthenticated, "querybyid: userID[%s]: %s", userID, err)
+					}
+				}
+
+				ctx = setUser(ctx, usr)
 			}
 
 			return next(ctx, r)
