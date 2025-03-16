@@ -81,3 +81,21 @@ func (a *app) queryByID(ctx context.Context, r *http.Request) web.Encoder {
 
 	return toAppCourse(prd)
 }
+
+//==================================================================================================================
+
+// ==================================================================================================================
+
+func (a *app) getCoursesByStudentId(ctx context.Context, r *http.Request) web.Encoder {
+	usr, err := mid.GetUser(ctx)
+	if err != nil {
+		return errs.Newf(errs.Internal, "user missing in context: %s", err)
+	}
+
+	cors, err := a.courseBus.GetCoursesByStudentID(ctx, usr.ID)
+	if err != nil {
+		return errs.Newf(errs.Internal, "query: %s", err)
+	}
+
+	return toAppCourses(cors)
+}

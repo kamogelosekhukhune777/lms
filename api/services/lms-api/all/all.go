@@ -31,5 +31,6 @@ func (add) Add(app *web.App, cfg mux.Config) {
 	courseapp.Routes(app, courseapp.Config{
 		Log:       cfg.Log,
 		CourseBus: cfg.BusConfig.CourseBus,
+		UserBus:   cfg.BusConfig.UserBus,
 	})
 }
