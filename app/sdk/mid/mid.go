@@ -6,6 +6,7 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
+	"github.com/kamogelosekhukhune777/lms/business/domain/coursebus"
 	"github.com/kamogelosekhukhune777/lms/business/domain/userbus"
 	"github.com/kamogelosekhukhune777/lms/foundation/web"
 )
@@ -25,6 +26,7 @@ type ctxKey int
 const (
 	userIDKey ctxKey = iota + 1
 	userKey
+	courseKey
 )
 
 func setUserID(ctx context.Context, userID uuid.UUID) context.Context {
@@ -50,6 +52,20 @@ func GetUser(ctx context.Context) (userbus.User, error) {
 	v, ok := ctx.Value(userKey).(userbus.User)
 	if !ok {
 		return userbus.User{}, errors.New("user not found in context")
+	}
+
+	return v, nil
+}
+
+func setCourse(ctx context.Context, prd coursebus.Course) context.Context {
+	return context.WithValue(ctx, courseKey, prd)
+}
+
+// GetCourse returns the product from the context.
+func GetCourse(ctx context.Context) (coursebus.Course, error) {
+	v, ok := ctx.Value(courseKey).(coursebus.Course)
+	if !ok {
+		return coursebus.Course{}, errors.New("course not found in context")
 	}
 
 	return v, nil
