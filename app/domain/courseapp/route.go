@@ -24,9 +24,9 @@ func Routes(app *web.App, cfg Config) {
 
 	//instructor
 	app.HandlerFunc(http.MethodPost, version, "/add", api.create)
-	app.HandlerFunc(http.MethodPost, version, "/get/details/{course_id}", api.queryByID, cor)
-	app.HandlerFunc(http.MethodPost, version, "/get", api.queryAll)
-	app.HandlerFunc(http.MethodPost, version, "/update/{course_id}", api.update, cor)
+	app.HandlerFunc(http.MethodGet, version, "/get/details/{course_id}", api.queryByID, cor)
+	app.HandlerFunc(http.MethodGet, version, "/get", api.queryAll)
+	app.HandlerFunc(http.MethodPut, version, "/update/{course_id}", api.update, cor)
 
 	//student
 	//course
