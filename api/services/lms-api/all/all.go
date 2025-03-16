@@ -2,6 +2,7 @@
 package all
 
 import (
+	"github.com/kamogelosekhukhune777/lms/app/domain/courseapp"
 	"github.com/kamogelosekhukhune777/lms/app/domain/testapp"
 	"github.com/kamogelosekhukhune777/lms/app/domain/userapp"
 	"github.com/kamogelosekhukhune777/lms/app/sdk/mux"
@@ -25,5 +26,10 @@ func (add) Add(app *web.App, cfg mux.Config) {
 		Log:     cfg.Log,
 		UserBus: cfg.BusConfig.UserBus,
 		Auth:    cfg.Auth,
+	})
+
+	courseapp.Routes(app, courseapp.Config{
+		Log:       cfg.Log,
+		CourseBus: cfg.BusConfig.CourseBus,
 	})
 }

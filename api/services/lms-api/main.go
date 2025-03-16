@@ -17,6 +17,8 @@ import (
 	"github.com/kamogelosekhukhune777/lms/app/sdk/auth"
 	"github.com/kamogelosekhukhune777/lms/app/sdk/debug"
 	"github.com/kamogelosekhukhune777/lms/app/sdk/mux"
+	"github.com/kamogelosekhukhune777/lms/business/domain/coursebus"
+	"github.com/kamogelosekhukhune777/lms/business/domain/coursebus/stores/coursedb"
 	"github.com/kamogelosekhukhune777/lms/business/domain/userbus"
 	"github.com/kamogelosekhukhune777/lms/business/domain/userbus/stores/userdb"
 	"github.com/kamogelosekhukhune777/lms/business/sdk/migrate"
@@ -166,6 +168,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 	// Create Business Packages
 
 	userBus := userbus.NewBusiness(log, userdb.NewStore(log, db))
+	courseBus := coursebus.NewBusiness(log, userBus, coursedb.NewStore(log, db))
 
 	// -------------------------------------------------------------------------
 	// Start Debug Service
@@ -192,7 +195,8 @@ func run(ctx context.Context, log *logger.Logger) error {
 		DB:    db,
 		Auth:  ath,
 		BusConfig: mux.BusConfig{
-			UserBus: userBus,
+			UserBus:   userBus,
+			CourseBus: courseBus,
 		},
 	}
 
