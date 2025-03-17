@@ -8,6 +8,8 @@ import (
 	"github.com/kamogelosekhukhune777/lms/app/sdk/errs"
 	"github.com/kamogelosekhukhune777/lms/app/sdk/mid"
 	"github.com/kamogelosekhukhune777/lms/business/domain/coursebus"
+	"github.com/kamogelosekhukhune777/lms/business/sdk/order"
+	"github.com/kamogelosekhukhune777/lms/business/sdk/page"
 	"github.com/kamogelosekhukhune777/lms/foundation/web"
 )
 
@@ -83,6 +85,67 @@ func (a *app) queryByID(ctx context.Context, r *http.Request) web.Encoder {
 }
 
 //==================================================================================================================
+
+func (a *app) getAllStudentViewCourses(ctx context.Context, r *http.Request) web.Encoder {
+	qp := parseQueryParams(r)
+
+	page, err := page.Parse(qp.Page, qp.Rows)
+	if err != nil {
+		return errs.NewFieldErrors("page", err)
+	}
+
+	filter, err := parseFilter(qp)
+	if err != nil {
+		return err.(*errs.Error)
+	}
+
+	orderBy, err := order.Parse(orderByFields, qp.OrderBy, coursebus.DefaultOrderBy)
+	if err != nil {
+		return errs.NewFieldErrors("order", err)
+	}
+
+	prds, err := a.courseBus.GetAllStudentViewCourses(ctx, filter, orderBy, page)
+	if err != nil {
+		return errs.Newf(errs.Internal, "query: %s", err)
+	}
+
+	return toAppCourses(prds)
+}
+
+func (a *app) getStudentViewCourseDetails(ctx context.Context, r *http.Request) web.Encoder {
+	cor, err := mid.GetCourse(ctx)
+	if err != nil {
+		return errs.Newf(errs.Internal, "course missing in context: %s", err)
+	}
+
+	lecs, err := a.courseBus.GetLectures(ctx, cor.ID)
+	if err != nil {
+		return errs.Newf(errs.Internal, "%s", err)
+	}
+
+	cor.Curriculum = lecs
+
+	return toAppCourse(cor)
+}
+
+func (a *app) checkCoursePurchaseInfo(ctx context.Context, r *http.Request) web.Encoder {
+	usr, err := mid.GetUser(ctx)
+	if err != nil {
+		return errs.Newf(errs.Internal, "user missing in context: %s", err)
+	}
+
+	cor, err := mid.GetCourse(ctx)
+	if err != nil {
+		return errs.Newf(errs.Internal, "course missing in context: %s", err)
+	}
+
+	sta, err := a.courseBus.CheckCoursePurchaseInfo(ctx, cor.ID, usr.ID)
+	if err != nil {
+		return errs.Newf(errs.Internal, "purchase info : %s", err)
+	}
+
+	return BoolResult(sta)
+}
 
 // ==================================================================================================================
 

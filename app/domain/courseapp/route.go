@@ -33,13 +33,12 @@ func Routes(app *web.App, cfg Config) {
 
 	//student
 	//course
-	app.HandlerFunc(http.MethodGet, version, "/get", api.create)
-	app.HandlerFunc(http.MethodGet, version, "get/details/{}", api.create)
-	app.HandlerFunc(http.MethodGet, version, "/purchase-info/{}/{}", api.create)
+	app.HandlerFunc(http.MethodGet, version, "/get", api.getAllStudentViewCourses)
+	app.HandlerFunc(http.MethodGet, version, "get/details/{course_id}", api.getStudentViewCourseDetails, cor)                  //"/get/details/:id"
+	app.HandlerFunc(http.MethodGet, version, "/purchase-info/{course_id}/{student_id}", api.checkCoursePurchaseInfo, usr, cor) //"/purchase-info/:id/:studentId""
 
 	//student-courses
-	//----"/get/{student_id}"
-	app.HandlerFunc(http.MethodGet, version, "/get/{user_id}", api.getCoursesByStudentId, usr)
+	app.HandlerFunc(http.MethodGet, version, "/get/{user_id}", api.getCoursesByStudentId, usr) //----"/get/{student_id}"
 
 	//course progress
 
