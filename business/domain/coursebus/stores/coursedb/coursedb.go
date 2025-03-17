@@ -1,6 +1,7 @@
 package coursedb
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -8,6 +9,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/kamogelosekhukhune777/lms/business/domain/coursebus"
+	"github.com/kamogelosekhukhune777/lms/business/sdk/order"
+	"github.com/kamogelosekhukhune777/lms/business/sdk/page"
 	"github.com/kamogelosekhukhune777/lms/business/sdk/sqldb"
 	"github.com/kamogelosekhukhune777/lms/foundation/logger"
 )
@@ -123,7 +126,113 @@ func (s *Store) QueryAll(ctx context.Context) ([]coursebus.Course, error) {
 	return toBusCourses(dbPrds)
 }
 
-//=============================================================================================================================
+//==============================================================================================================================
+
+func (s *Store) QueryAllStudentViewCourses(ctx context.Context, filter coursebus.QueryFilter, orderBy order.By, page page.Page) ([]coursebus.Course, error) {
+	data := map[string]any{
+		"offset":        (page.Number() - 1) * page.RowsPerPage(),
+		"rows_per_page": page.RowsPerPage(),
+	}
+
+	const q = `
+	SELECT
+	    product_id, user_id, name, cost, quantity, date_created, date_updated
+	FROM
+		Courses`
+
+	buf := bytes.NewBufferString(q)
+	s.applyFilter(filter, data, buf)
+
+	orderByClause, err := orderByClause(orderBy)
+	if err != nil {
+		return nil, err
+	}
+
+	buf.WriteString(orderByClause)
+	buf.WriteString(" OFFSET :offset ROWS FETCH NEXT :rows_per_page ROWS ONLY")
+
+	var dbPrds []course
+	if err := sqldb.NamedQuerySlice(ctx, s.log, s.db, buf.String(), data, &dbPrds); err != nil {
+		return nil, fmt.Errorf("namedqueryslice: %w", err)
+	}
+
+	return toBusCourses(dbPrds)
+}
+
+func (s *Store) CheckCoursePurchaseInfo(ctx context.Context, courseID uuid.UUID, studentID uuid.UUID) (bool, error) {
+	data := struct {
+		courseID  string `db:"course_id"`
+		StudentID string `db:"student_id"`
+	}{
+		courseID:  courseID.String(),
+		StudentID: studentID.String(),
+	}
+
+	const q = `
+	SELECT EXISTS (
+		SELECT 1 
+		FROM Enrollments 
+		WHERE student_id = :student_id 
+		AND course_id = :course_id
+	) AS has_purchased`
+
+	if err := sqldb.NamedExecContext(ctx, s.log, s.db, q, data); err != nil {
+		return false, nil
+	}
+
+	return true, nil
+}
+
+func (s *Store) GetLectures(ctx context.Context, courseID uuid.UUID) ([]coursebus.Lecture, error) {
+	data := struct {
+		CourseID string `json:"course_id"`
+	}{
+		CourseID: courseID.String(),
+	}
+
+	query := `
+	SELECT 
+		id, title 
+	FROM 
+		lectures 
+	WHERE 
+		course_id = :course_id
+	ORDER BY id`
+
+	var lectures []lecture
+	err := sqldb.NamedQuerySlice(ctx, s.log, s.db, query, data, &lectures)
+	if err != nil {
+		return nil, err
+	}
+	return toBusLectures(lectures)
+}
+
+func (s *Store) GetCoureStudents(ctx context.Context, courseID uuid.UUID) ([]coursebus.Student, error) {
+
+	data := struct {
+		CourseID string `json:"course_id"`
+	}{
+		CourseID: courseID.String(),
+	}
+
+	query := `
+	SELECT 
+		s.id, s.name 
+	FROM 
+		students s
+	JOIN enrollments e ON s.id = e.student_id
+	WHERE 
+		e.course_id = :course_id
+	ORDER BY s.id`
+
+	var students []student
+	err := sqldb.NamedQuerySlice(ctx, s.log, s.db, query, data, &students)
+	if err != nil {
+		return nil, err
+	}
+
+	return toBusStudents(students)
+}
 
 // =============================================================================================================================
 
