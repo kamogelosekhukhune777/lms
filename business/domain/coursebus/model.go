@@ -20,6 +20,8 @@ type Course struct {
 	Image           string
 	WelcomeMessage  string
 	Pricing         money.Money
+	Curriculum      []Lecture
+	Student         []Student
 	Objectives      string
 	IsPublished     bool
 	CreatedAt       time.Time
@@ -36,6 +38,7 @@ type NewCourse struct {
 	Description     string
 	Image           string
 	WelcomeMessage  string
+	Curriculum      []Lecture
 	Pricing         money.Money
 	Objectives      string
 }
@@ -49,8 +52,27 @@ type UpdateCourse struct {
 	Description     *string
 	Image           *string
 	WelcomeMessage  *string
+	Curriculum      []Lecture
 	Pricing         *money.Money
 	Objectives      *string
 }
 
 //=================================================================================
+
+type Lecture struct {
+	ID          uuid.UUID
+	CourseID    uuid.UUID
+	Title       string
+	VideoURL    string
+	PublicID    string
+	FreePreview bool
+}
+
+// Student(course Students)/(Enrollments)
+type Student struct {
+	ID         uuid.UUID
+	StudentID  uuid.UUID
+	CourseID   uuid.UUID
+	PaidAmount money.Money
+	EnrolledAt time.Time
+}

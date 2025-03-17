@@ -9,6 +9,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/kamogelosekhukhune777/lms/business/domain/userbus"
+	"github.com/kamogelosekhukhune777/lms/business/sdk/order"
+	"github.com/kamogelosekhukhune777/lms/business/sdk/page"
 	"github.com/kamogelosekhukhune777/lms/business/sdk/sqldb"
 	"github.com/kamogelosekhukhune777/lms/foundation/logger"
 )
@@ -28,6 +30,10 @@ type Storer interface {
 	QueryByID(ctx context.Context, courseID uuid.UUID) (Course, error)
 	QueryAll(ctx context.Context) ([]Course, error)
 	GetCoursesByStudentID(ctx context.Context, studentId uuid.UUID) ([]Course, error)
+	CheckCoursePurchaseInfo(ctx context.Context, courseID uuid.UUID, studentID uuid.UUID) (bool, error)
+	GetLectures(ctx context.Context, courseID uuid.UUID) ([]Lecture, error)
+	GetCoureStudents(ctx context.Context, courseID uuid.UUID) ([]Student, error)
+	QueryAllStudentViewCourses(ctx context.Context, filter QueryFilter, orderBy order.By, page page.Page) ([]Course, error)
 }
 
 // Business manages the set of APIs for product access.
@@ -183,11 +189,43 @@ func (b *Business) QueryAll(ctx context.Context) ([]Course, error) {
 
 //==================================================================================================================
 
-func (b *Business) GetAllStudentViewCourses(ctx context.Context) {}
+func (b *Business) GetAllStudentViewCourses(ctx context.Context, filter QueryFilter, orderBy order.By, page page.Page) ([]Course, error) {
 
-func (b *Business) GetStudentViewCourseDetails(ctx context.Context) {}
+	prds, err := b.storer.QueryAllStudentViewCourses(ctx, filter, orderBy, page)
+	if err != nil {
+		return nil, fmt.Errorf("query: %w", err)
+	}
 
-func (b *Business) CheckCoursePurchaseInfo(ctx context.Context) {}
+	return prds, nil
+
+}
+
+func (b *Business) CheckCoursePurchaseInfo(ctx context.Context, courseID uuid.UUID, studentID uuid.UUID) (bool, error) {
+	sta, err := b.storer.CheckCoursePurchaseInfo(ctx, courseID, studentID)
+	if err != nil {
+		return false, fmt.Errorf("query: %w", err)
+	}
+
+	return sta, nil
+}
+
+func (b *Business) GetLectures(ctx context.Context, courseID uuid.UUID) ([]Lecture, error) {
+	lecs, err := b.storer.GetLectures(ctx, courseID)
+	if err != nil {
+		return []Lecture{}, nil
+	}
+
+	return lecs, nil
+}
+
+func (b *Business) GetCoureStudents(ctx context.Context, courseID uuid.UUID) ([]Student, error) {
+	stu, err := b.storer.GetCoureStudents(ctx, courseID)
+	if err != nil {
+		return []Student{}, nil
+	}
+
+	return stu, nil
+}
 
 //==================================================================================================================
 
