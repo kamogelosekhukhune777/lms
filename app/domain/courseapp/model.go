@@ -26,15 +26,9 @@ type Course struct {
 	WelcomeMessage  string    `json:"welcome_message"`
 	Pricing         float64   `json:"pricing"`
 	Objectives      string    `json:"objectives"`
+	Curriculum      []Lecture `json:"curriculum"`
 	IsPublished     bool      `json:"is_published"`
 	CreatedAt       time.Time `json:"created_at"`
-}
-
-type Courses []Course
-
-func (app Courses) Encode() ([]byte, string, error) {
-	data, err := json.Marshal(app)
-	return data, "application/json", err
 }
 
 // Encode implements the encoder interface.
@@ -69,6 +63,20 @@ func toAppCourses(cors []coursebus.Course) Courses {
 	}
 
 	return app
+}
+
+type Courses []Course
+
+func (app Courses) Encode() ([]byte, string, error) {
+	data, err := json.Marshal(app)
+	return data, "application/json", err
+}
+
+type BoolResult bool
+
+func (app BoolResult) Encode() ([]byte, string, error) {
+	data, err := json.Marshal(app)
+	return data, "application/json", err
 }
 
 // =============================================================================
@@ -185,4 +193,74 @@ func toBusUpdateCourse(app UpdateCourse) (coursebus.UpdateCourse, error) {
 	}
 
 	return bus, nil
+}
+
+//=============================================================
+
+type Lecture struct {
+	ID          string `json:"lecture_id"`
+	CourseID    string `json:"course_id"`
+	Title       string `json:"title"`
+	VideoURL    string `json:"video_url"`
+	PublicID    string `json:"public_id"`
+	FreePreview bool   `json:"free_preview"`
+}
+
+// Encode implements the encoder interface.
+func (app Lecture) Encode() ([]byte, string, error) {
+	data, err := json.Marshal(app)
+	return data, "application/json", err
+}
+
+//=====================================================================
+
+type NewLecture struct{}
+
+// Decode implements the decoder interface.
+func (app *NewLecture) Decode(data []byte) error {
+	return json.Unmarshal(data, app)
+}
+
+// Validate checks the data in the model is considered clean.
+func (app NewLecture) Validate() error {
+	if err := errs.Check(app); err != nil {
+		return fmt.Errorf("validate: %w", err)
+	}
+
+	return nil
+}
+
+//========================================================================
+
+// Student(course Students)/(Enrollments)
+type Student struct {
+	ID         string    `json:"id"`
+	StudentID  string    `json:"student_id"`
+	CourseID   string    `json:"course_id"`
+	PaidAmount float64   `json:"paid_amount"`
+	EnrolledAt time.Time `json:"enrolled_at"`
+}
+
+// Encode implements the encoder interface.
+func (app Student) Encode() ([]byte, string, error) {
+	data, err := json.Marshal(app)
+	return data, "application/json", err
+}
+
+//===========================================================================
+
+type NewStudent struct{}
+
+// Decode implements the decoder interface.
+func (app *NewStudent) Decode(data []byte) error {
+	return json.Unmarshal(data, app)
+}
+
+// Validate checks the data in the model is considered clean.
+func (app NewStudent) Validate() error {
+	if err := errs.Check(app); err != nil {
+		return fmt.Errorf("validate: %w", err)
+	}
+
+	return nil
 }
