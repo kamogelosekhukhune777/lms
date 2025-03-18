@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/kamogelosekhukhune777/lms/business/domain/coursebus"
 	"github.com/kamogelosekhukhune777/lms/business/domain/userbus"
+	"github.com/kamogelosekhukhune777/lms/business/sdk/sqldb"
 	"github.com/kamogelosekhukhune777/lms/foundation/web"
 )
 
@@ -27,6 +28,7 @@ const (
 	userIDKey ctxKey = iota + 1
 	userKey
 	courseKey
+	trKey
 )
 
 func setUserID(ctx context.Context, userID uuid.UUID) context.Context {
@@ -66,6 +68,20 @@ func GetCourse(ctx context.Context) (coursebus.Course, error) {
 	v, ok := ctx.Value(courseKey).(coursebus.Course)
 	if !ok {
 		return coursebus.Course{}, errors.New("course not found in context")
+	}
+
+	return v, nil
+}
+
+func setTran(ctx context.Context, tx sqldb.CommitRollbacker) context.Context {
+	return context.WithValue(ctx, trKey, tx)
+}
+
+// GetTran retrieves the value that can manage a transaction.
+func GetTran(ctx context.Context) (sqldb.CommitRollbacker, error) {
+	v, ok := ctx.Value(trKey).(sqldb.CommitRollbacker)
+	if !ok {
+		return nil, errors.New("transaction not found in context")
 	}
 
 	return v, nil
