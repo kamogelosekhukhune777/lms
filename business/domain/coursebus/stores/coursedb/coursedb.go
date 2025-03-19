@@ -59,23 +59,22 @@ func (s *Store) Create(ctx context.Context, cor coursebus.Course) error {
 
 func (s *Store) Update(ctx context.Context, cor coursebus.Course) error {
 	const q = `
-	UPDATE
-		Courses
+	UPDATE Courses
 	SET
-		"title" = :title,
-		"category" = :category,
-		"level" = :level,
-		"primary_language" = :primary_language,
-		"subtitle" = :subtitle,
-		"description" = :description,
-		"image" = :image,
-		"welcome_message" = :welcome_message,
-		"pricing" = :pricing, 
-		"objectives" = :objectives,
-		"is_published" = :is_published,
-		"created_at" = :created_at
+		title = :title,
+		category = :category,
+		level = :level,
+		primary_language = :primary_language,
+		subtitle = :subtitle,
+		description = :description,
+		image = :image,
+		welcome_message = :welcome_message,
+		pricing = :pricing, 
+		objectives = :objectives,
+		is_published = :is_published,
+		created_at = :created_at
 	WHERE
-		product_id = :product_id`
+		course_id = :course_id`
 
 	if err := sqldb.NamedExecContext(ctx, s.log, s.db, q, toDBCourse(cor)); err != nil {
 		return fmt.Errorf("namedexeccontext: %w", err)
@@ -176,11 +175,12 @@ func (s *Store) CheckCoursePurchaseInfo(ctx context.Context, courseID uuid.UUID,
 		AND course_id = :course_id
 	) AS has_purchased`
 
-	if err := sqldb.NamedExecContext(ctx, s.log, s.db, q, data); err != nil {
-		return false, nil
+	var hasPurchased bool
+	if err := sqldb.NamedQueryStruct(ctx, s.log, s.db, q, data, &hasPurchased); err != nil {
+		return false, fmt.Errorf("namedquerystruct: %w", err)
 	}
 
-	return true, nil
+	return hasPurchased, nil
 }
 
 func (s *Store) GetLectures(ctx context.Context, courseID uuid.UUID) ([]coursebus.Lecture, error) {
@@ -208,16 +208,15 @@ func (s *Store) GetLectures(ctx context.Context, courseID uuid.UUID) ([]coursebu
 }
 
 func (s *Store) GetCoureStudents(ctx context.Context, courseID uuid.UUID) ([]coursebus.Student, error) {
-
 	data := struct {
-		CourseID string `json:"course_id"`
+		CourseID string `db:"course_id"`
 	}{
 		CourseID: courseID.String(),
 	}
 
-	query := `
+	const query = `
 	SELECT 
-		s.id, s.name 
+		s.* 
 	FROM 
 		students s
 	JOIN enrollments e ON s.id = e.student_id
@@ -228,7 +227,7 @@ func (s *Store) GetCoureStudents(ctx context.Context, courseID uuid.UUID) ([]cou
 	var students []student
 	err := sqldb.NamedQuerySlice(ctx, s.log, s.db, query, data, &students)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("namedqueryslice: %w", err)
 	}
 
 	return toBusStudents(students)
