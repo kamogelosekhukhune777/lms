@@ -271,3 +271,126 @@ func (s *Store) GetCoursesByStudentID(ctx context.Context, studentID uuid.UUID) 
 
 	return toBusCourses(dbPrds)
 }
+
+//====================================================================================================================
+
+func (s *Store) CourseProgress(ctx context.Context, userID uuid.UUID, courseID uuid.UUID) (coursebus.CourseProgress, error) {
+	data := struct {
+		UserID   string `db:"user_id"`
+		CourseID string `db:"course_id"`
+	}{
+		UserID:   userID.String(),
+		CourseID: courseID.String(),
+	}
+
+	const q = `
+	SELECT * 
+	FROM 
+		CourseProgress 
+	WHERE 
+		user_id = :user_id 
+	AND 
+		course_id = :course_id`
+
+	var corp courseProgress
+	if err := sqldb.NamedQueryStruct(ctx, s.log, s.db, q, data, &corp); err != nil {
+		return coursebus.CourseProgress{}, fmt.Errorf("db: %w", err)
+	}
+
+	return toBusCourseProgress(corp), nil
+}
+
+func (s *Store) MarkLectureAsViewed(ctx context.Context, userID, courseID, lectureID uuid.UUID) error {
+	data := struct {
+		ID         string `db:"lecture_progress_id"`
+		ProgressID string `db:"progress_id"`
+		CourseID   string `db:"course_id"`
+		UserID     string `db:"user_id"`
+		LectureID  string `db:"lecture_id"`
+	}{
+		ID:         uuid.New().String(),
+		ProgressID: uuid.New().String(),
+		CourseID:   courseID.String(),
+		UserID:     userID.String(),
+		LectureID:  lectureID.String(),
+	}
+
+	// Mark lecture as viewed
+	const ql = `
+		INSERT INTO LectureProgress 
+			(lecture_progress_id, user_id, lecture_id, viewed, date_viewed)
+		VALUES 
+			(:lecture_progress_id, :user_id, :lecture_id, TRUE, NOW())
+		ON CONFLICT (user_id, lecture_id) DO UPDATE 
+			SET viewed = TRUE, date_viewed = NOW()`
+
+	if err := sqldb.NamedExecContext(ctx, s.log, s.db, ql, data); err != nil {
+		return fmt.Errorf("namedexeccontext: %w", err)
+	}
+
+	// Check if all lectures in the course are viewed by the user
+	const qm = `
+	SELECT NOT EXISTS 
+		(SELECT 1 FROM Lectures l
+		LEFT JOIN LectureProgress lp 
+		ON l.lecture_id = lp.lecture_id AND lp.user_id = :user_id
+		WHERE l.course_id = :course_id 
+		AND (lp.viewed IS NULL OR lp.viewed = FALSE)) AS all_completed`
+
+	var allCompleted bool
+	if err := sqldb.NamedQueryStruct(ctx, s.log, s.db, qm, data, &allCompleted); err != nil {
+		return fmt.Errorf("namedquerystruct: %w", err)
+	}
+
+	// If all lectures are viewed, mark the course as completed
+	if allCompleted {
+		const qo = `
+		INSERT INTO CourseProgress 
+			(progress_id, user_id, course_id, completed, completion_date)
+		VALUES 
+			(:progress_id, :user_id, :course_id, TRUE, NOW())
+		ON CONFLICT (user_id, course_id) DO UPDATE 
+			SET completed = TRUE, completion_date = NOW()`
+
+		if err := sqldb.NamedExecContext(ctx, s.log, s.db, qo, data); err != nil {
+			return fmt.Errorf("namedexeccontext: %w", err)
+		}
+	}
+
+	return nil
+}
+
+func (s *Store) ResetCourseProgress(ctx context.Context, userID uuid.UUID, courseID uuid.UUID) error {
+	data := struct {
+		CourseID string `db:"course_id"`
+		UserID   string `db:"user_id"`
+	}{
+		CourseID: courseID.String(),
+		UserID:   userID.String(),
+	}
+
+	const ql = `
+		DELETE FROM LectureProgress 
+		WHERE 
+			user_id = :user_id
+		AND lecture_id IN 
+			(SELECT lecture_id FROM Lectures WHERE course_id = :course_id)`
+
+	if err := sqldb.NamedExecContext(ctx, s.log, s.db, ql, data); err != nil {
+		return fmt.Errorf("namedexeccontext: %w", err)
+	}
+
+	// Delete course progress
+	const qp = `
+		DELETE FROM CourseProgress 
+		WHERE 
+			user_id = :user_id 
+		AND 
+			course_id = :course_id`
+
+	if err := sqldb.NamedExecContext(ctx, s.log, s.db, qp, data); err != nil {
+		return fmt.Errorf("namedexeccontext: %w", err)
+	}
+
+	return nil
+}

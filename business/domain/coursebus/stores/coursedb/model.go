@@ -187,3 +187,24 @@ func toBusStudents(dbs []student) ([]coursebus.Student, error) {
 
 	return bus, nil
 }
+
+//==========================================================================================================
+//==========================================================================================================
+
+type courseProgress struct {
+	ID             uuid.UUID `db:"progress_id"`
+	UserID         uuid.UUID `db:"user_id"`
+	CourseID       uuid.UUID `db:"course_id"`
+	Completed      bool      `db:"completed"`
+	CompletionDate time.Time `db:"completion_date"`
+}
+
+func toBusCourseProgress(dbcp courseProgress) coursebus.CourseProgress {
+	return coursebus.CourseProgress{
+		ID:             dbcp.ID,
+		UserID:         dbcp.UserID,
+		CourseID:       dbcp.CourseID,
+		Completed:      dbcp.Completed,
+		CompletionDate: dbcp.CompletionDate,
+	}
+}
