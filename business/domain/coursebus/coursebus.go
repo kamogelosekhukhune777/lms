@@ -34,6 +34,9 @@ type Storer interface {
 	GetLectures(ctx context.Context, courseID uuid.UUID) ([]Lecture, error)
 	GetCoureStudents(ctx context.Context, courseID uuid.UUID) ([]Student, error)
 	QueryAllStudentViewCourses(ctx context.Context, filter QueryFilter, orderBy order.By, page page.Page) ([]Course, error)
+	ResetCourseProgress(ctx context.Context, userID uuid.UUID, courseID uuid.UUID) error
+	MarkLectureAsViewed(ctx context.Context, userID, courseID, lectureID uuid.UUID) error
+	GetCourseProgress(ctx context.Context, userID uuid.UUID, courseID uuid.UUID) (CourseProgress, error)
 }
 
 // Business manages the set of APIs for product access.
@@ -233,6 +236,53 @@ func (b *Business) GetCoursesByStudentID(ctx context.Context, studentId uuid.UUI
 	cors, err := b.storer.GetCoursesByStudentID(ctx, studentId)
 	if err != nil {
 		return []Course{}, fmt.Errorf("query: %w", err)
+	}
+
+	return cors, nil
+}
+
+//======================================================================================================================
+
+func (b *Business) CourseProgress(ctx context.Context, userID uuid.UUID, courseID uuid.UUID) (CourseProgress, error) {
+	sta, err := b.storer.CheckCoursePurchaseInfo(ctx, courseID, userID)
+	if err != nil {
+		return CourseProgress{}, fmt.Errorf("query: %w", err)
+	}
+
+	if !sta {
+		return CourseProgress{}, fmt.Errorf("Course not bought")
+	}
+	//
+
+	cors, err := b.storer.GetCourseProgress(ctx, userID, courseID)
+	if err != nil {
+		return CourseProgress{}, fmt.Errorf("query course progres:%w", err)
+	}
+
+	return cors, nil
+}
+
+func (b *Business) MarkLecture(ctx context.Context, userID uuid.UUID, courseID uuid.UUID, lectureID uuid.UUID) (CourseProgress, error) {
+	if err := b.storer.MarkLectureAsViewed(ctx, userID, courseID, lectureID); err != nil {
+		return CourseProgress{}, fmt.Errorf("mark lecture:%w", err)
+	}
+
+	cors, err := b.storer.GetCourseProgress(ctx, userID, courseID)
+	if err != nil {
+		return CourseProgress{}, fmt.Errorf("mark lecture:%w", err)
+	}
+
+	return cors, nil
+}
+
+func (b *Business) ResetCourseProgress(ctx context.Context, userID uuid.UUID, courseID uuid.UUID) (CourseProgress, error) {
+	if err := b.storer.ResetCourseProgress(ctx, userID, courseID); err != nil {
+		return CourseProgress{}, fmt.Errorf("reset course progress: %w", err)
+	}
+
+	cors, err := b.storer.GetCourseProgress(ctx, userID, courseID)
+	if err != nil {
+		return CourseProgress{}, fmt.Errorf("reset course progress:%w", err)
 	}
 
 	return cors, nil

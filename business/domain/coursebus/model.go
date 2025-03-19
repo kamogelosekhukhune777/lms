@@ -57,7 +57,8 @@ type UpdateCourse struct {
 	Objectives      *string
 }
 
-//=================================================================================
+//========================================================================================================================
+//========================================================================================================================
 
 type Lecture struct {
 	ID          uuid.UUID
@@ -75,4 +76,23 @@ type Student struct {
 	CourseID   uuid.UUID
 	PaidAmount money.Money
 	EnrolledAt time.Time
+}
+
+//========================================================================================================================
+//========================================================================================================================
+
+type CourseProgress struct {
+	ID             uuid.UUID
+	UserID         uuid.UUID
+	CourseID       uuid.UUID
+	Completed      bool
+	CompletionDate time.Time
+}
+
+type LectureProgress struct {
+	ID         uuid.UUID
+	UserID     uuid.UUID
+	LectureID  uuid.UUID
+	Viewed     bool
+	DateViewed time.Time
 }

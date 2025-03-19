@@ -273,7 +273,7 @@ func (s *Store) GetCoursesByStudentID(ctx context.Context, studentID uuid.UUID) 
 
 //====================================================================================================================
 
-func (s *Store) CourseProgress(ctx context.Context, userID uuid.UUID, courseID uuid.UUID) (coursebus.CourseProgress, error) {
+func (s *Store) GetCourseProgress(ctx context.Context, userID uuid.UUID, courseID uuid.UUID) (coursebus.CourseProgress, error) {
 	data := struct {
 		UserID   string `db:"user_id"`
 		CourseID string `db:"course_id"`
