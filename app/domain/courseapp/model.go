@@ -264,3 +264,29 @@ func (app NewStudent) Validate() error {
 
 	return nil
 }
+
+//==============================================================================
+
+type CourseProgess struct {
+	ID             string
+	UserID         string
+	CourseID       string
+	Completed      bool
+	CompletionDate time.Time
+}
+
+// Encode implements the encoder interface.
+func (app CourseProgess) Encode() ([]byte, string, error) {
+	data, err := json.Marshal(app)
+	return data, "application/json", err
+}
+
+func toAppCourseProgress(corp coursebus.CourseProgress) CourseProgess {
+	return CourseProgess{
+		ID:             corp.ID.String(),
+		UserID:         corp.UserID.String(),
+		CourseID:       corp.CourseID.String(),
+		Completed:      corp.Completed,
+		CompletionDate: corp.CompletionDate,
+	}
+}

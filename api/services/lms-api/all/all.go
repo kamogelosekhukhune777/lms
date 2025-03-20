@@ -32,5 +32,6 @@ func (add) Add(app *web.App, cfg mux.Config) {
 		Log:       cfg.Log,
 		CourseBus: cfg.BusConfig.CourseBus,
 		UserBus:   cfg.BusConfig.UserBus,
+		DB:        cfg.DB,
 	})
 }
