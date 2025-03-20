@@ -17,8 +17,11 @@ import (
 	"github.com/kamogelosekhukhune777/lms/app/sdk/auth"
 	"github.com/kamogelosekhukhune777/lms/app/sdk/debug"
 	"github.com/kamogelosekhukhune777/lms/app/sdk/mux"
+	"github.com/kamogelosekhukhune777/lms/app/sdk/paypal"
 	"github.com/kamogelosekhukhune777/lms/business/domain/coursebus"
 	"github.com/kamogelosekhukhune777/lms/business/domain/coursebus/stores/coursedb"
+	"github.com/kamogelosekhukhune777/lms/business/domain/orderbus"
+	"github.com/kamogelosekhukhune777/lms/business/domain/orderbus/stores/orderdb"
 	"github.com/kamogelosekhukhune777/lms/business/domain/userbus"
 	"github.com/kamogelosekhukhune777/lms/business/domain/userbus/stores/userdb"
 	"github.com/kamogelosekhukhune777/lms/business/sdk/migrate"
@@ -174,6 +177,15 @@ func run(ctx context.Context, log *logger.Logger) error {
 
 	userBus := userbus.NewBusiness(log, userdb.NewStore(log, db))
 	courseBus := coursebus.NewBusiness(log, userBus, coursedb.NewStore(log, db))
+	ordeBus := orderbus.NewBusiness(log, userBus, courseBus, orderdb.NewStore(log, db))
+
+	// -------------------------------------------------------------------------
+	// PayPal s
+
+	pay, err := paypal.NewPayPalClient(cfg.Paypal.ClientID, cfg.Paypal.SecretID, cfg.Paypal.URL)
+	if err != nil {
+		return fmt.Errorf("payapal error: %w", err)
+	}
 
 	// -------------------------------------------------------------------------
 	// Start Debug Service
@@ -195,13 +207,15 @@ func run(ctx context.Context, log *logger.Logger) error {
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 
 	cfgMux := mux.Config{
-		Build: build,
-		Log:   log,
-		DB:    db,
-		Auth:  ath,
+		Build:  build,
+		Log:    log,
+		DB:     db,
+		Auth:   ath,
+		Paypal: pay,
 		BusConfig: mux.BusConfig{
 			UserBus:   userBus,
 			CourseBus: courseBus,
+			OrderBus:  ordeBus,
 		},
 	}
 

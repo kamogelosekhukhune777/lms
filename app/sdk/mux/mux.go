@@ -9,7 +9,9 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/kamogelosekhukhune777/lms/app/sdk/auth"
 	"github.com/kamogelosekhukhune777/lms/app/sdk/mid"
+	"github.com/kamogelosekhukhune777/lms/app/sdk/paypal"
 	"github.com/kamogelosekhukhune777/lms/business/domain/coursebus"
+	"github.com/kamogelosekhukhune777/lms/business/domain/orderbus"
 	"github.com/kamogelosekhukhune777/lms/business/domain/userbus"
 	"github.com/kamogelosekhukhune777/lms/foundation/logger"
 	"github.com/kamogelosekhukhune777/lms/foundation/web"
@@ -18,6 +20,7 @@ import (
 type BusConfig struct {
 	UserBus   *userbus.Business
 	CourseBus *coursebus.Business
+	OrderBus  *orderbus.Business
 }
 
 // Config contains all the mandatory systems required by handlers.
@@ -26,6 +29,7 @@ type Config struct {
 	Log       *logger.Logger
 	DB        *sqlx.DB
 	Auth      *auth.Auth
+	Paypal    *paypal.PayPalClient
 	BusConfig BusConfig
 }
 

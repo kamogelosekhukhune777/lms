@@ -3,10 +3,10 @@ package all
 
 import (
 	"github.com/kamogelosekhukhune777/lms/app/domain/courseapp"
+	"github.com/kamogelosekhukhune777/lms/app/domain/orderapp"
 	"github.com/kamogelosekhukhune777/lms/app/domain/testapp"
 	"github.com/kamogelosekhukhune777/lms/app/domain/userapp"
 	"github.com/kamogelosekhukhune777/lms/app/sdk/mux"
-	"github.com/kamogelosekhukhune777/lms/app/sdk/paypal"
 	"github.com/kamogelosekhukhune777/lms/foundation/web"
 )
 
@@ -36,5 +36,10 @@ func (add) Add(app *web.App, cfg mux.Config) {
 		DB:        cfg.DB,
 	})
 
-	_, _ = paypal.NewPayPalClient("", "", "")
+	orderapp.Routes(app, orderapp.Config{
+		Log:       cfg.Log,
+		CourseBus: cfg.BusConfig.CourseBus,
+		UserBus:   cfg.BusConfig.UserBus,
+		Paypal:    cfg.Paypal,
+	})
 }
