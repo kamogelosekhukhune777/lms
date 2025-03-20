@@ -72,6 +72,9 @@ github.com/jmoiron/sqlx/reflectx
 ## explicit; go 1.18
 github.com/leodido/go-urn
 github.com/leodido/go-urn/scim/schema
+# github.com/plutov/paypal/v4 v4.11.0
+## explicit; go 1.23
+github.com/plutov/paypal/v4
 # golang.org/x/crypto v0.32.0
 ## explicit; go 1.20
 golang.org/x/crypto/bcrypt
