@@ -88,6 +88,11 @@ func run(ctx context.Context, log *logger.Logger) error {
 			Issuer string `conf:"default:lms project"`
 			Secret string `conf:"default:lms_jwt_secret,mask"`
 		}
+		Paypal struct {
+			ClientID string `conf:"default:,mask"`
+			SecretID string `conf:"default:,mask"`
+			URL      string `conf:"default:,mask"`
+		}
 	}{
 		Version: conf.Version{
 			Build: build,
@@ -201,7 +206,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 	}
 
 	webAPI := mux.WebAPI(cfgMux,
-		buildRoutes())
+		all.Routes())
 
 	api := http.Server{
 		Addr:         cfg.Web.APIHost,
@@ -241,9 +246,4 @@ func run(ctx context.Context, log *logger.Logger) error {
 	}
 
 	return nil
-}
-
-func buildRoutes() mux.RouteAdder {
-
-	return all.Routes()
 }

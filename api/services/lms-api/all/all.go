@@ -6,6 +6,7 @@ import (
 	"github.com/kamogelosekhukhune777/lms/app/domain/testapp"
 	"github.com/kamogelosekhukhune777/lms/app/domain/userapp"
 	"github.com/kamogelosekhukhune777/lms/app/sdk/mux"
+	"github.com/kamogelosekhukhune777/lms/app/sdk/paypal"
 	"github.com/kamogelosekhukhune777/lms/foundation/web"
 )
 
@@ -34,4 +35,6 @@ func (add) Add(app *web.App, cfg mux.Config) {
 		UserBus:   cfg.BusConfig.UserBus,
 		DB:        cfg.DB,
 	})
+
+	_, _ = paypal.NewPayPalClient("", "", "")
 }
