@@ -3,8 +3,11 @@ package web
 
 import (
 	"context"
+	"embed"
 	"fmt"
+	"io/fs"
 	"net/http"
+	"regexp"
 
 	"github.com/google/uuid"
 )
@@ -140,4 +143,51 @@ func (a *App) HandlerFuncNoMid(method string, group string, path string, handler
 	finalPath = fmt.Sprintf("%s %s", method, finalPath)
 
 	a.ServeMux.HandleFunc(finalPath, h)
+}
+
+// FileServerReact starts a file server based on the specified file system and
+// directory inside that file system for a statically built react webapp.
+func (a *App) FileServerReact(static embed.FS, dir string, path string) error {
+	fileMatcher := regexp.MustCompile(`\.[a-zA-Z]*$`)
+
+	fSys, err := fs.Sub(static, dir)
+	if err != nil {
+		return fmt.Errorf("switching to static folder: %w", err)
+	}
+
+	fileServer := http.StripPrefix(path, http.FileServer(http.FS(fSys)))
+
+	h := func(w http.ResponseWriter, r *http.Request) {
+		if !fileMatcher.MatchString(r.URL.Path) {
+			p, err := static.ReadFile(fmt.Sprintf("%s/index.html", dir))
+			if err != nil {
+				a.log(context.Background(), "FileServerReact", "ERROR", err)
+				return
+			}
+
+			w.Write(p)
+			return
+		}
+
+		fileServer.ServeHTTP(w, r)
+	}
+
+	a.ServeMux.HandleFunc(fmt.Sprintf("GET %s", path), h)
+
+	return nil
+}
+
+// FileServer starts a file server based on the specified file system and
+// directory inside that file system.
+func (a *App) FileServer(static embed.FS, dir string, path string) error {
+	fSys, err := fs.Sub(static, dir)
+	if err != nil {
+		return fmt.Errorf("switching to static folder: %w", err)
+	}
+
+	fileServer := http.StripPrefix(path, http.FileServer(http.FS(fSys)))
+
+	a.ServeMux.Handle(fmt.Sprintf("GET %s", path), fileServer)
+
+	return nil
 }
