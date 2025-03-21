@@ -3,6 +3,7 @@ package all
 
 import (
 	"github.com/kamogelosekhukhune777/lms/app/domain/courseapp"
+	"github.com/kamogelosekhukhune777/lms/app/domain/mediapp"
 	"github.com/kamogelosekhukhune777/lms/app/domain/orderapp"
 	"github.com/kamogelosekhukhune777/lms/app/domain/testapp"
 	"github.com/kamogelosekhukhune777/lms/app/domain/userapp"
@@ -41,5 +42,10 @@ func (add) Add(app *web.App, cfg mux.Config) {
 		CourseBus: cfg.BusConfig.CourseBus,
 		UserBus:   cfg.BusConfig.UserBus,
 		Paypal:    cfg.Paypal,
+	})
+
+	mediapp.Routes(app, mediapp.Config{
+		Log:              cfg.Log,
+		CloudinaryClient: cfg.CloudinaryClient,
 	})
 }

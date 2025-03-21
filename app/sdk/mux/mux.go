@@ -8,6 +8,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/kamogelosekhukhune777/lms/app/sdk/auth"
+	"github.com/kamogelosekhukhune777/lms/app/sdk/cloudinary"
 	"github.com/kamogelosekhukhune777/lms/app/sdk/mid"
 	"github.com/kamogelosekhukhune777/lms/app/sdk/paypal"
 	"github.com/kamogelosekhukhune777/lms/business/domain/coursebus"
@@ -25,12 +26,13 @@ type BusConfig struct {
 
 // Config contains all the mandatory systems required by handlers.
 type Config struct {
-	Build     string
-	Log       *logger.Logger
-	DB        *sqlx.DB
-	Auth      *auth.Auth
-	Paypal    *paypal.PayPalClient
-	BusConfig BusConfig
+	Build            string
+	Log              *logger.Logger
+	DB               *sqlx.DB
+	Auth             *auth.Auth
+	Paypal           *paypal.PayPalClient
+	CloudinaryClient *cloudinary.CloudinaryService
+	BusConfig        BusConfig
 }
 
 // RouteAdder defines behavior that sets the routes to bind for an instance

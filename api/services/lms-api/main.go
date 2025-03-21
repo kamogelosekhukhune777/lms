@@ -15,6 +15,7 @@ import (
 	"github.com/ardanlabs/conf/v3"
 	"github.com/kamogelosekhukhune777/lms/api/services/lms-api/all"
 	"github.com/kamogelosekhukhune777/lms/app/sdk/auth"
+	"github.com/kamogelosekhukhune777/lms/app/sdk/cloudinary"
 	"github.com/kamogelosekhukhune777/lms/app/sdk/debug"
 	"github.com/kamogelosekhukhune777/lms/app/sdk/mux"
 	"github.com/kamogelosekhukhune777/lms/app/sdk/paypal"
@@ -95,6 +96,9 @@ func run(ctx context.Context, log *logger.Logger) error {
 			ClientID string `conf:"default:,mask"`
 			SecretID string `conf:"default:,mask"`
 			URL      string `conf:"default:,mask"`
+		}
+		Cloudinary struct {
+			URL string `conf:"default:,mask`
 		}
 	}{
 		Version: conf.Version{
@@ -187,6 +191,15 @@ func run(ctx context.Context, log *logger.Logger) error {
 		return fmt.Errorf("payapal error: %w", err)
 	}
 
+	//--------------------------------------------------------------------------
+	//cloudinary
+
+	//os.Getenv("CLOUDINARY_URL")
+	clodinary, err := cloudinary.NewCloudinaryService(cfg.Cloudinary.URL)
+	if err != nil {
+		return fmt.Errorf("cloudinary error: %w", err)
+	}
+
 	// -------------------------------------------------------------------------
 	// Start Debug Service
 
@@ -207,11 +220,12 @@ func run(ctx context.Context, log *logger.Logger) error {
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 
 	cfgMux := mux.Config{
-		Build:  build,
-		Log:    log,
-		DB:     db,
-		Auth:   ath,
-		Paypal: pay,
+		Build:            build,
+		Log:              log,
+		DB:               db,
+		Auth:             ath,
+		Paypal:           pay,
+		CloudinaryClient: clodinary,
 		BusConfig: mux.BusConfig{
 			UserBus:   userBus,
 			CourseBus: courseBus,
