@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"embed"
 	"errors"
 	"expvar"
 	"fmt"
@@ -30,6 +31,9 @@ import (
 	"github.com/kamogelosekhukhune777/lms/foundation/logger"
 	"github.com/kamogelosekhukhune777/lms/foundation/web"
 )
+
+//go:embed static
+var static embed.FS
 
 var build = "develop"
 
@@ -234,7 +238,10 @@ func run(ctx context.Context, log *logger.Logger) error {
 	}
 
 	webAPI := mux.WebAPI(cfgMux,
-		all.Routes())
+		all.Routes(),
+		mux.WithCORS(cfg.Web.CORSAllowedOrigins),
+		mux.WithFileServer(false, static, "static", "/"),
+	)
 
 	api := http.Server{
 		Addr:         cfg.Web.APIHost,
